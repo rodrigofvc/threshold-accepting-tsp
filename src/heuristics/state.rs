@@ -33,6 +33,30 @@ impl State {
         let neighbor = State { parent: self, tour: tour_neighbor };
         neighbor
     }
+
+    /**
+    * Adds the distance between cities that are next, and distance between first and last city.
+    * 1-2-3-4-5-..-n.
+    * distance(1,2) + distance(2,3) + distance(3,4) +..+ distance(n-1,n) + distance(n,1)
+    */
+    pub fn fitness (&self) -> f32 {
+        let mut fitness = 0.0;
+        let len = self.tour.len();
+        let mut i = 0;
+        while i != len {
+            if i + 1 != len {
+                fitness += self.tour[i].get_distance(self.tour[i+1].clone());
+                i += 1;
+                continue;
+            }
+            break;
+        }
+        // Add the distance between origin city and last city
+        fitness += self.tour[0].get_distance(self.tour[len-1].clone());
+        return fitness;
+    }
+
+
 }
 
 
@@ -53,6 +77,13 @@ impl State {
              // Check if city appears one time
              assert_eq!(times.len(), 1);
         }
+     }
+
+     #[test]
+     fn test_fitness(){
+         let initial = init_state();
+         let range = 681.0..682.0;
+         assert!(range.contains(&initial.fitness()));
      }
 
      fn init_state() -> State {
