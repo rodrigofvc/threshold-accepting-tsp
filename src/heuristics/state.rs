@@ -56,6 +56,22 @@ impl State {
         return fitness;
     }
 
+     /**
+     * Get a string with every coordenade of every city.
+     * Firts column is x axis, second column is y axis.
+     * #X #Y
+     * 1.23 4.56 # First city
+     * .........
+     *
+     */
+     pub fn get_coordinates(&self) -> String {
+         let mut content = String::new();
+         for city in &self.tour {
+             content.push_str(&city.to_string());
+         }
+         content.push_str(&self.tour[0].to_string());
+         content
+     }
 
 }
 

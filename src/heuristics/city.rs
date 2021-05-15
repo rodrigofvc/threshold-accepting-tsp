@@ -31,6 +31,21 @@ impl City {
         return adds.sqrt();
     }
 
+    /**
+    * Return x coordenade and y coordenade.
+    * # X Y
+    * 1.23 3.45
+    */
+    pub fn to_string(&self) -> String {
+        let mut content = String::new();
+        content.push(' ');
+        content.push_str(&self.x_axis.to_string());
+        content.push(' ');
+        content.push_str(&self.y_axis.to_string());
+        content.push('\n');
+        content
+    }
+
 }
 
 
