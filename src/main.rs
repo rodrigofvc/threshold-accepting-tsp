@@ -11,7 +11,7 @@ fn main() {
     let path_file = args[1].clone();
     let initial_state = get_initial_state(path_file);
     let start = Instant::now();
-    let iter = 700;
+    let iter = 100;
     let best = th_acp::threshold_accepting(initial_state, iter);
     let duration = start.elapsed();
     println!("El mejor resultado posible obtenido: \n {:#?}", best);
@@ -46,7 +46,7 @@ fn get_initial_state(path_file: String) -> State {
 */
 fn get_file(state : State)  {
     let content = state.get_coordinates();
-    let path = "data.dat";
+    let path = "data/data.dat";
     fs::File::create(path).expect("No se pudó crear un archivo");
     fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
 }
