@@ -12,12 +12,13 @@ fn main() {
     let initial_state = get_initial_state(path_file);
     let start = Instant::now();
     let iter = 100;
-    let best = th_acp::threshold_accepting(initial_state, iter);
+    let (best,log) = th_acp::threshold_accepting(initial_state, iter);
     let duration = start.elapsed();
     println!("El mejor resultado posible obtenido: \n {:#?}", best);
     println!("Longitud: {}", best.fitness());
     println!("Tiempo: {:?}", duration);
     get_file(best);
+    get_log(log);
 }
 
 // example.txt Optimal: 6656
@@ -47,6 +48,27 @@ fn get_initial_state(path_file: String) -> State {
 fn get_file(state : State)  {
     let content = state.get_coordinates();
     let path = "data/data.dat";
+    fs::File::create(path).expect("No se pudó crear un archivo");
+    fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
+}
+
+
+/**
+* Given a vector with the fitness value of best state in each iteration,
+* create a file with the (x,y) coordinates.
+* log: vector with the fitness value.
+*/
+fn get_log(log : Vec<String>)  {
+    let mut content = String::new();
+    let path = "log/log.dat";
+    let mut pos = 20;
+    for l in log {
+        content.push_str(&pos.to_string());
+        content.push(' ');
+        content.push_str(&l);
+        content.push('\n');
+        pos += 20;
+    }
     fs::File::create(path).expect("No se pudó crear un archivo");
     fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
 }
