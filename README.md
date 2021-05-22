@@ -30,11 +30,25 @@ As result there is a file `data.dat` in `data` dir, which has the sorted coordin
 Then run the Gnuplot script in `data` dir to see the output.
 
 ```bash
-gnuplot data/load_graph.gp
+cd data
+gnuplot load_graph.gp
 ```
 
 <div class="col-md-offset">
   <img src="data/data.png" width="500" height="500">
+</div>
+
+Also, there is a log of fitness about each solution during execution in `log.dat` in `log` dir.
+
+Then run the Gnuplot script in `log` dir to see the output.
+
+```bash
+cd log
+gnuplot load_log.gp
+```
+
+<div class="col-md-offset">
+  <img src="log/log.png" width="500" height="500">
 </div>
 
 ### Test
