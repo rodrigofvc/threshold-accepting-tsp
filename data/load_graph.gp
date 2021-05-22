@@ -1,6 +1,6 @@
 # png
 set terminal pngcairo size 950,962 enhanced font 'Verdana,20'
-set output 'data/data.png'
+set output 'data.png'
 
 set border linewidth 1.5
 
@@ -14,4 +14,4 @@ unset key
 set yrange [10900:12900]
 set xrange [41500:43500]
 
-plot 'data/data.dat' with linespoints linestyle 1
+plot 'data.dat' with linespoints linestyle 1
