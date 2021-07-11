@@ -20,7 +20,7 @@ impl City {
 
 
     /**
-    * Get distance.
+    * Get natural distance.
     */
     pub fn get_distance(&self, other: City) -> f32 {
         let mut distance = 0.0;
