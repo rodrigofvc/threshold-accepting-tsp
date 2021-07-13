@@ -6,15 +6,15 @@ pub struct City {
     pub name: String,
     pub country: String,
     pub population: u32,
-    pub latitude: f32,
-    pub longitude: f32,
+    pub latitude: f64,
+    pub longitude: f64,
 }
 
 impl City {
     /**
     * Create a new City.
     */
-    pub fn new(id: u32, name: String, country: String, population: u32, latitude: f32, longitude: f32) -> City {
+    pub fn new(id: u32, name: String, country: String, population: u32, latitude: f64, longitude: f64) -> City {
         City {id, name, country, population, latitude,longitude}
     }
 
@@ -22,8 +22,7 @@ impl City {
     /**
     * Get natural distance.
     */
-    pub fn get_distance(&self, other: City) -> f32 {
-        let mut distance = 0.0;
+    pub fn get_distance(&self, other: City) -> f64 {
         let r = 6373000.0;
         let difference_latitude = (self.latitude.to_radians() - other.latitude.to_radians())/2.0;
         let product_lattitude = self.latitude.to_radians().cos() * other.latitude.to_radians().cos();

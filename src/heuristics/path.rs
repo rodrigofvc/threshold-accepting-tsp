@@ -4,15 +4,14 @@ use core::cmp::Ordering;
 pub struct Path {
     pub id_city_1: u32,
     pub id_city_2: u32,
-    pub distance: f32,
+    pub distance: f64,
 }
 
 impl Path {
-    pub fn new(id_city_1: u32, id_city_2: u32, distance: f32) -> Path {
+    pub fn new(id_city_1: u32, id_city_2: u32, distance: f64) -> Path {
         Path {id_city_1, id_city_2, distance}
     }
 }
-
 
 impl PartialEq for Path {
     fn eq(&self, other : &Self) -> bool {
