@@ -29,9 +29,9 @@ fn main() {
     println!(" C {:#?}", initial.cost());
     println!(" M {:#?}", initial.maximum_distance());
     */
-    let iterations = 1000;
-    let temperature = 10.0;
-    let decrement = 0.9;
+    let iterations = 100;
+    let temperature = 1000.0;
+    let decrement = 0.6;
     let epsilon = 40.0;
     let best = th_acp::threshold_accepting(initial, iterations, temperature, decrement, *seed, epsilon);
     let duration = start.elapsed().as_secs();
