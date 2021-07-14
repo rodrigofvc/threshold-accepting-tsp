@@ -1,43 +1,109 @@
 mod heuristics;
-use std::fs;
 use std::env;
+use std::fs;
 use std::time::Instant;
+use rusqlite::{Connection, Result};
 use crate::heuristics::state::State as State;
 use crate::heuristics::city::City as City;
+use crate::heuristics::path::Path as Path;
 use crate::heuristics::threshold_accepting as th_acp;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let path_file = args[1].clone();
-    let initial_state = get_initial_state(path_file);
     let start = Instant::now();
-    let iter = 100;
-    let (best,log) = th_acp::threshold_accepting(initial_state, iter);
-    let duration = start.elapsed();
-    println!("El mejor resultado posible obtenido: \n {:#?}", best);
-    println!("Longitud: {}", best.fitness());
-    println!("Tiempo: {:?}", duration);
-    get_file(best);
-    get_log(log);
+    let seed = &args[1].parse::<u64>().unwrap();
+    let path_file = &args[2];
+    let instance = read_file(path_file.to_string());
+    let mut paths : Vec<Path> = Vec::new();
+    let mut cities : Vec<City> = Vec::new();
+    let read = read(&mut paths, &mut cities);
+    match read {
+        Ok(_)  => {},
+        Err(e) => { println!("{:?}", e) }
+    }
+    let cities : Vec<City> = cities.into_iter().filter(|x| instance.iter().any(|&y| y == x.id) ).collect();
+    let paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| y.id == x.id_city_1) && cities.iter().any(|y| y.id == x.id_city_2) ).collect();
+    let initial = State::new(&paths, cities.clone());
+    /*
+    println!(" N {:#?}", initial.normalizer());
+    println!(" C {:#?}", initial.cost());
+    println!(" M {:#?}", initial.maximum_distance());
+    */
+    let iterations = 1000;
+    let temperature = 10.0;
+    let decrement = 0.9;
+    let epsilon = 40.0;
+    let best = th_acp::threshold_accepting(initial, iterations, temperature, decrement, *seed, epsilon);
+    let duration = start.elapsed().as_secs();
+    println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?}", best.to_string(), best.cost());
+    println!(" Tiempo: {:?} segundos", duration);
+    write_file(best);
 }
 
-// example.txt Optimal: 6656
-// example1.txt Optimal: 9352
-fn get_initial_state(path_file: String) -> State {
-    let mut cities : Vec<City> = vec![];
+fn read (paths: &mut Vec<Path>, cities: &mut Vec<City>) -> Result<()> {
+    let conn = Connection::open("tsp_data.db")?;
+
+    let mut stmt_cities =
+    conn.prepare(
+        "SELECT id, name, country, population, latitude, longitude FROM cities"
+    )?;
+
+    let cities_ = stmt_cities.query_map([], |row| {
+        Ok(
+            City {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                country: row.get(2)?,
+                population: row.get(3)?,
+                latitude: row.get(4)?,
+                longitude: row.get(5)?,
+            }
+        )
+    })?;
+    for city in cities_ {
+        cities.push(city.unwrap());
+    }
+    let mut stmt_paths =
+    conn.prepare(
+        "SELECT id_city_1, id_city_2, distance FROM connections"
+    )?;
+
+    let paths_ = stmt_paths.query_map([], |row| {
+        Ok(
+            Path {
+                id_city_1: row.get(0)?,
+                id_city_2: row.get(1)?,
+                distance: row.get(2)?,
+            }
+        )
+    })?;
+    for path in paths_ {
+        paths.push(path.unwrap());
+    }
+    Ok(())
+}
+
+fn read_file(path_file: String) -> Vec<u32> {
+    let mut cities : Vec<u32> = vec![];
     let content = fs::read_to_string(path_file).expect("No se encontró el archivo");
     let chunks : Vec<String> = content.split("\n").map(str::to_string).collect();
+    let chunks : Vec<String> = chunks.iter().map(|x|x.replace(' ',"")).collect();
     let chunks : Vec<String> = chunks.iter().map(|x|x.replace('\r',"")).collect();
+    let chunks : Vec<String> = chunks.iter().map(|x|x.replace('\t',"")).collect();
     for chunk in chunks {
         if chunk.len() == 0 {
             continue;
         }
-        let tokens : Vec<String> = chunk.split_whitespace().map(str::to_string).collect();
-        let new_city = City::new(tokens[0].parse::<u32>().unwrap(),tokens[1].parse::<f32>().unwrap(),tokens[2].parse::<f32>().unwrap());
-        cities.push(new_city);
+        let ct : Vec<String> = chunk.split(",").map(str::to_string).collect();
+        for n in ct {
+            if n.len() == 0 {
+                continue;
+            }
+            let m : u32 = n.parse::<u32>().unwrap();
+            cities.push(m);
+        }
     }
-    let initial = State::new(std::ptr::null(), cities);
-    return initial;
+    return cities;
 }
 
 /**
@@ -45,30 +111,9 @@ fn get_initial_state(path_file: String) -> State {
 * the file can be read using a Gnuplot script.
 * state: the state from which generate the file.
 */
-fn get_file(state : State)  {
+fn write_file(state : State)  {
     let content = state.get_coordinates();
     let path = "data/data.dat";
-    fs::File::create(path).expect("No se pudó crear un archivo");
-    fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
-}
-
-
-/**
-* Given a vector with the fitness value of best state in each iteration,
-* create a file with the (x,y) coordinates.
-* log: vector with the fitness value.
-*/
-fn get_log(log : Vec<String>)  {
-    let mut content = String::new();
-    let path = "log/log.dat";
-    let mut pos = 20;
-    for l in log {
-        content.push_str(&pos.to_string());
-        content.push(' ');
-        content.push_str(&l);
-        content.push('\n');
-        pos += 20;
-    }
     fs::File::create(path).expect("No se pudó crear un archivo");
     fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
 }
