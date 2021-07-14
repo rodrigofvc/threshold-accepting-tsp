@@ -8,6 +8,7 @@ pub struct Path {
 }
 
 impl Path {
+    #[allow(dead_code)]
     pub fn new(id_city_1: u32, id_city_2: u32, distance: f64) -> Path {
         Path {id_city_1, id_city_2, distance}
     }
