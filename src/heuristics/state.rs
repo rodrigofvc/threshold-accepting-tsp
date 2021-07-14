@@ -1,36 +1,50 @@
-use rand::Rng;
+use rand::{Rng, SeedableRng, StdRng};
 use crate::heuristics::city::City as City;
 use crate::heuristics::path::Path as Path;
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct State<'a> {
-    pub parent: *const State<'a>,
     pub paths: &'a Vec<Path>,
     pub tour: Vec<City>
 }
 
 
 impl<'a> State<'a> {
-    pub fn new(parent: *const State<'a>, paths: &'a Vec<Path>,  tour: Vec<City>) -> State<'a> {
-        State { parent, paths:paths, tour }
+    #[allow(dead_code)]
+    pub fn new(paths: &'a Vec<Path>,  tour: Vec<City>) -> State<'a> {
+        State { paths:paths, tour }
     }
 
     /**
     * Create a new neighbor changing two random positions.
     */
-    pub fn get_neighbor(&self) -> State {
-        let mut i = rand::thread_rng().gen_range(0, self.tour.len());
-        let mut j = rand::thread_rng().gen_range(0, self.tour.len());
+    pub fn get_neighbor(&self, seed: u64) -> State {
+        let mut rng : StdRng = SeedableRng::seed_from_u64(seed);
+        let mut i = rng.gen_range(0, self.tour.len());
+        let mut j = rng.gen_range(0, self.tour.len());
         while i == j {
-            i = rand::thread_rng().gen_range(0, self.tour.len());
-            j = rand::thread_rng().gen_range(0, self.tour.len());
+            i = rng.gen_range(0, self.tour.len());
+            j = rng.gen_range(0, self.tour.len());
         }
         let mut tour_neighbor = self.tour.clone();
         let tmp = self.tour[i].clone();
         tour_neighbor[i] = self.tour[j].clone();
         tour_neighbor[j] = tmp;
-        let neighbor = State { parent: self, paths:self.paths, tour: tour_neighbor };
+        let neighbor = State { paths:self.paths, tour: tour_neighbor };
         neighbor
+    }
+
+    pub fn set_neighbor(&mut self, seed: u64) {
+        let mut rng : StdRng = SeedableRng::seed_from_u64(seed);
+        let mut i = rng.gen_range(0, self.tour.len());
+        let mut j = rng.gen_range(0, self.tour.len());
+        while i == j {
+            i = rng.gen_range(0, self.tour.len());
+            j = rng.gen_range(0, self.tour.len());
+        }
+        let tmp = self.tour[i].clone();
+        self.tour[i] = self.tour[j].clone();
+        self.tour[j] = tmp;
     }
 
 
@@ -86,6 +100,7 @@ impl<'a> State<'a> {
         max_path.distance
     }
 
+    #[allow(dead_code)]
     pub fn is_feasible(&self) -> bool {
         for i in 1..self.tour.len() {
             let is_path = self.paths.iter().find(|&x| x.id_city_1 == self.tour[i-1].id && x.id_city_2 == self.tour[i].id);
@@ -94,6 +109,18 @@ impl<'a> State<'a> {
             }
         }
         true
+    }
+
+    pub fn to_string(&self) -> String {
+        let mut s = String::new();
+        s.push('[');
+        for city in &self.tour {
+            s.push(' ');
+            s.push_str(&city.id.to_string());
+            s.push(' ');
+        }
+        s.push(']');
+        return s;
     }
 
 
@@ -125,8 +152,8 @@ impl<'a> State<'a> {
      #[test]
      fn test_get_neighbor() {
          let (cities, paths) = init();
-         let initial = State::new(std::ptr::null(), &paths, cities);
-         let neighbor = initial.get_neighbor();
+         let initial = State::new(&paths, cities);
+         let neighbor = initial.get_neighbor(11);
          let changed = neighbor.tour.iter()
                                 .filter(|&x|
                                     neighbor.tour.iter().position(|y| *y == *x).unwrap() !=
@@ -137,7 +164,7 @@ impl<'a> State<'a> {
      #[test]
      fn test_maximum_distance() {
         let (cities, paths) = init();
-        let mut initial = State::new(std::ptr::null(), &paths, cities);
+        let initial = State::new(&paths, cities);
         let max = initial.maximum_distance();
         assert_eq!(max, 1124687.0);
      }
@@ -145,7 +172,7 @@ impl<'a> State<'a> {
      #[test]
      fn test_feasible_solution() {
         let (cities, paths) = init();
-        let mut initial = State::new(std::ptr::null(), &paths, cities);
+        let mut initial = State::new(&paths, cities);
         let mut feasible = initial.is_feasible();
         assert!(feasible);
         let other = City::new(10, String::from("other"), String::from("Other"), 0, 6.4, 41.0);
@@ -163,7 +190,7 @@ impl<'a> State<'a> {
      #[test]
      fn test_normalizer() {
          let (cities, paths) = init();
-         let mut initial = State::new(std::ptr::null(), &paths, cities);
+         let mut initial = State::new(&paths, cities);
          let mut nm = 1124687.0 + 42353.6 + 23467.5 + 16498.7;
          assert_eq!(initial.normalizer(), nm);
          let f = City::new(6, String::from("f"), String::from("F"), 0, 36.5, 63.7);
@@ -179,7 +206,7 @@ impl<'a> State<'a> {
      #[test]
      fn test_cost() {
          let (cities, paths) = init();
-         let mut initial = State::new(std::ptr::null(), &paths, cities);
+         let mut initial = State::new(&paths, cities);
          let mut nm = 1124687.0 + 42353.6 + 23467.5 + 16498.7;
          let mut cost;
          cost = 12345.3 + 5383.9 + 3426.6 + 23467.5;
@@ -230,54 +257,4 @@ impl<'a> State<'a> {
         let paths = vec![ab,ac,ad,ae,bc,bd,be,cd,ce,de,fg,fh,fj,hj];
         (cities, paths)
     }
-
-
-/*
-     #[test]
-     fn test_get_neighbor() {
-         let initial = init_state();
-         let neighbor = initial.get_neighbor();
-         assert_eq!(initial.tour.len(), initial.tour.len());
-         // Check if the neighbor is a valid state
-         for city in initial.tour {
-             let iter = neighbor.tour.iter();
-             let times : Vec<&City> = iter.filter(|&x| x.id == city.id).collect();
-             // Check if city appears one time
-             assert_eq!(times.len(), 1);
-        }
-     }
-
-     #[test]
-     fn test_fitness(){
-         let initial = init_state();
-         let range = 681.0..682.0;
-         assert!(range.contains(&initial.fitness()));
-     }
-
-     fn init_state() -> State {
-        let a = City::new(1, 34.4, 54.6);
-        // 1 -> 2 42.242277
-        let b = City::new(2, 12.3, 18.6);
-        // 2 -> 3 87.184001
-        let c = City::new(3, 96.0, 43.0);
-        // 3 -> 4 94.681044
-        let d = City::new(4, 03.7, 21.9);
-        // 4 -> 5 75.700066
-        let e = City::new(5, 76.4, 43.0);
-        // 5 -> 6 63.724799
-        let f = City::new(6, 14.1, 29.6);
-        // 6 -> 7  29.441637
-        let g = City::new(7, 23.2, 01.6);
-        // 7 -> 8 81.973715
-        let h = City::new(8, 32.0, 83.1);
-        // 8 -> 9 82.186374
-        let i = City::new(9, 88.8, 23.7);
-        // 9 -> 10 92.93374
-        let j = City::new(10, 12.6, 76.9);
-        // 10 -> 11 31.185413
-        let cities = vec![a,b,c,d,e,f,g,h,i,j];
-        let initial = State::new(std::ptr::null(), cities);
-        return initial;
-    }
-*/
  }

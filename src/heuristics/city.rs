@@ -14,6 +14,7 @@ impl City {
     /**
     * Create a new City.
     */
+    #[allow(dead_code)]
     pub fn new(id: u32, name: String, country: String, population: u32, latitude: f64, longitude: f64) -> City {
         City {id, name, country, population, latitude,longitude}
     }
@@ -40,9 +41,9 @@ impl City {
     pub fn to_string(&self) -> String {
         let mut content = String::new();
         content.push(' ');
-        content.push_str(&self.latitude.to_string());
-        content.push(' ');
         content.push_str(&self.longitude.to_string());
+        content.push(' ');
+        content.push_str(&self.latitude.to_string());
         content.push('\n');
         content
     }
