@@ -6,23 +6,30 @@ Threshold Accepting for TSP
 * Cargo v1.5
 * Gnuplot v5.4
 
+### Build
+
+```bash
+cargo build
+```
+
 ### Input
 
-A file with the `(x,y)` coordinates of every city with this format.
+A seed for pseudo-random numbers.
+
+A file with the `id` of every city with this format.
 
 ```
-#X #Y
-1.23 3.45
-5.54 6.78
-9.78 3.43
+1,2,3,4,5,6,7,75,163,164,165,....
 ```
 
 ### Run
 
+`seed`: The seed for pseudo-random numbers.
+
 `path_file`: The path of file with the coordinates of every city.
 
 ```bash
-cargo run <path_file>
+cargo run <seed> <path_file>
 ```
 
 As result there is a file `data.dat` in `data` dir, which has the sorted coordinates of the best path found.
@@ -35,21 +42,14 @@ gnuplot load_graph.gp
 ```
 
 <div class="col-md-offset">
-  <img src="data/data.png" width="500" height="500">
+  <img src="data/data.png">
 </div>
 
-Also, there is a log of fitness about each solution during execution in `log.dat` in `log` dir.
-
-Then run the Gnuplot script in `log` dir to see the output.
+### Example
 
 ```bash
-cd log
-gnuplot load_log.gp
+cargo run 654 examples/example-1.txt
 ```
-
-<div class="col-md-offset">
-  <img src="log/log.png" width="500" height="500">
-</div>
 
 ### Test
 
