@@ -26,7 +26,7 @@ A file with the `id` of every city with this format.
 
 `seed`: The seed for pseudo-random numbers.
 
-`path_file`: The path of file with the coordinates of every city.
+`path_file`: The path of file with the id of every city.
 
 ```bash
 cargo run <seed> <path_file>
