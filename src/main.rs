@@ -1,4 +1,5 @@
 mod heuristics;
+mod algorithms;
 use std::env;
 use std::fs;
 use std::time::Instant;
@@ -7,6 +8,8 @@ use crate::heuristics::state::State as State;
 use crate::heuristics::city::City as City;
 use crate::heuristics::path::Path as Path;
 use crate::heuristics::threshold_accepting as th_acp;
+use crate::algorithms::kruskal::kruskal as kruskal;
+use crate::algorithms::approx_tsp::approx_tsp as approx_tsp;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -21,19 +24,22 @@ fn main() {
         Ok(_)  => {},
         Err(e) => { println!("{:?}", e) }
     }
-    let cities : Vec<City> = cities.into_iter().filter(|x| instance.iter().any(|&y| y == x.id) ).collect();
-    let paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| y.id == x.id_city_1) && cities.iter().any(|y| y.id == x.id_city_2) ).collect();
-    let initial = State::new(&paths, cities.clone());
-    /*
+
+    let mut cities : Vec<City> = cities.into_iter().filter(|x| instance.iter().any(|&y| y == x.id) ).collect();
+    let mut paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| y.id == x.id_city_1) && cities.iter().any(|y| y.id == x.id_city_2) ).collect();
+    let minimum_spanning_tree : Vec<Path> = kruskal::kruskal_algorithm(&mut cities, &mut paths);
+    let new_cities = approx_tsp::approximation_tsp(&cities, &minimum_spanning_tree);
+    let initial = State::new(&paths, new_cities.clone(), *seed);
+
     println!(" N {:#?}", initial.normalizer());
     println!(" C {:#?}", initial.cost());
     println!(" M {:#?}", initial.maximum_distance());
-    */
+
     let iterations = 100;
     let temperature = 1000.0;
-    let decrement = 0.6;
+    let decrement = 0.9;
     let epsilon = 40.0;
-    let best = th_acp::threshold_accepting(initial, iterations, temperature, decrement, *seed, epsilon);
+    let best = th_acp::threshold_accepting(initial, iterations, temperature, decrement, epsilon);
     let duration = start.elapsed().as_secs();
     println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?}", best.to_string(), best.cost());
     println!(" Tiempo: {:?} segundos", duration);

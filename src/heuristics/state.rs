@@ -2,46 +2,38 @@ use rand::{Rng, SeedableRng, StdRng};
 use crate::heuristics::city::City as City;
 use crate::heuristics::path::Path as Path;
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug)]
 pub struct State<'a> {
     pub paths: &'a Vec<Path>,
-    pub tour: Vec<City>
+    pub tour: Vec<City>,
+    rng: StdRng,
 }
 
 
 impl<'a> State<'a> {
-    #[allow(dead_code)]
-    pub fn new(paths: &'a Vec<Path>,  tour: Vec<City>) -> State<'a> {
-        State { paths:paths, tour }
+    pub fn new(paths: &'a Vec<Path>,  tour: Vec<City>, seed: u64) -> State<'a> {
+        State { paths:paths, tour, rng: SeedableRng::seed_from_u64(seed) }
     }
 
     /**
     * Create a new neighbor changing two random positions.
     */
-    pub fn get_neighbor(&self, seed: u64) -> State {
-        let mut rng : StdRng = SeedableRng::seed_from_u64(seed);
-        let mut i = rng.gen_range(0, self.tour.len());
-        let mut j = rng.gen_range(0, self.tour.len());
+    pub fn get_neighbor(&mut self) -> (State, (usize,usize)) {
+        let mut i = self.rng.gen_range(0, self.tour.len());
+        let mut j = self.rng.gen_range(0, self.tour.len());
         while i == j {
-            i = rng.gen_range(0, self.tour.len());
-            j = rng.gen_range(0, self.tour.len());
+            i = self.rng.gen_range(0, self.tour.len());
+            j = self.rng.gen_range(0, self.tour.len());
         }
         let mut tour_neighbor = self.tour.clone();
         let tmp = self.tour[i].clone();
         tour_neighbor[i] = self.tour[j].clone();
         tour_neighbor[j] = tmp;
-        let neighbor = State { paths:self.paths, tour: tour_neighbor };
-        neighbor
+        let neighbor = State { paths:self.paths, tour: tour_neighbor, rng: self.rng.clone()};
+        (neighbor,(i,j))
     }
 
-    pub fn set_neighbor(&mut self, seed: u64) {
-        let mut rng : StdRng = SeedableRng::seed_from_u64(seed);
-        let mut i = rng.gen_range(0, self.tour.len());
-        let mut j = rng.gen_range(0, self.tour.len());
-        while i == j {
-            i = rng.gen_range(0, self.tour.len());
-            j = rng.gen_range(0, self.tour.len());
-        }
+    pub fn set_neighbor(&mut self, i: usize, j: usize) {
         let tmp = self.tour[i].clone();
         self.tour[i] = self.tour[j].clone();
         self.tour[j] = tmp;
