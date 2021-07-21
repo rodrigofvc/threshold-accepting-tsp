@@ -8,7 +8,6 @@ use crate::heuristics::state::State as State;
 use crate::heuristics::city::City as City;
 use crate::heuristics::path::Path as Path;
 use crate::heuristics::threshold_accepting as th_acp;
-use crate::algorithms::kruskal::kruskal as kruskal;
 use crate::algorithms::approx_tsp::approx_tsp as approx_tsp;
 
 fn main() {
@@ -27,8 +26,7 @@ fn main() {
 
     let mut cities : Vec<City> = cities.into_iter().filter(|x| instance.iter().any(|&y| y == x.id) ).collect();
     let mut paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| y.id == x.id_city_1) && cities.iter().any(|y| y.id == x.id_city_2) ).collect();
-    let minimum_spanning_tree : Vec<Path> = kruskal::kruskal_algorithm(&mut cities, &mut paths);
-    let new_cities = approx_tsp::approximation_tsp(&cities, &minimum_spanning_tree);
+    let new_cities = approx_tsp::approximation_tsp(&mut cities, &mut paths);
     let initial = State::new(&paths, new_cities.clone(), *seed);
 
     println!(" N {:#?}", initial.normalizer());

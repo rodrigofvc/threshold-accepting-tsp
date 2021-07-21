@@ -62,47 +62,44 @@ mod test {
         let c = City{id:2, name: String::from("c"), population:1, country: String::from("C"), latitude: 0.00, longitude: 0.00};
         let d = City{id:3, name: String::from("d"), population:1, country: String::from("D"), latitude: 0.00, longitude: 0.00};
         let e = City{id:4, name: String::from("e"), population:1, country: String::from("E"), latitude: 0.00, longitude: 0.00};
-        let s_a = kruskal::make_set(a);
-        let s_b = kruskal::make_set(b);
-        let s_c = kruskal::make_set(c);
-        let s_d = kruskal::make_set(d);
-        let s_e = kruskal::make_set(e);
-        let mut sets : Vec<DisjointSet> = vec![s_a,s_b,s_c,s_d,s_e];
+        let set_a = kruskal::make_set(a);
+        let set_b = kruskal::make_set(b);
+        let mut set_c = kruskal::make_set(c);
+        let mut set_d = kruskal::make_set(d);
+        let mut set_e = kruskal::make_set(e);
+        let mut sets : Vec<DisjointSet> = vec![set_a,set_b,set_c,set_d,set_e];
         kruskal::union(&mut sets, 0, 1);
         kruskal::union(&mut sets, 2, 3);
         kruskal::union(&mut sets, 3, 4);
 
-        let s_a = &sets[0];
-        let s_b = &sets[1];
-        let s_c = &sets[2];
-        let s_d = &sets[3];
-        let s_e = &sets[4];
+        set_c = sets[2].clone();
+        set_d = sets[3].clone();
+        set_e = sets[4].clone();
 
-        let f_1 = kruskal::find_set(s_c.clone(), &sets);
-        assert!( f_1.city == s_c.city );
+        let f_1 = kruskal::find_set(set_c.clone(), &sets);
+        assert!( f_1.city == set_c.city );
 
-        let f_2 = kruskal::find_set(s_d.clone(), &sets);
-        assert!( f_2.city == s_c.city );
+        let f_2 = kruskal::find_set(set_d.clone(), &sets);
+        assert!( f_2.city == set_c.city );
 
-        let f_3 = kruskal::find_set(s_e.clone(), &sets);
-        assert!( f_3.city == s_c.city );
+        let f_3 = kruskal::find_set(set_e.clone(), &sets);
+        assert!( f_3.city == set_c.city );
 
         kruskal::union(&mut sets, 1, 4);
 
-        let s_a = &sets[0];
-        let s_b = &sets[1];
-        let s_c = &sets[2];
-        let s_d = &sets[3];
-        let s_e = &sets[4];
+        let set_a = sets[0].clone();
+        set_c = sets[2].clone();
+        set_d = sets[3].clone();
+        set_e = sets[4].clone();
 
-        let f_1 = kruskal::find_set(s_c.clone(), &sets);
-        assert!( f_1.city == s_a.city );
+        let f_1 = kruskal::find_set(set_c.clone(), &sets);
+        assert!( f_1.city == set_a.city );
 
-        let f_2 = kruskal::find_set(s_d.clone(), &sets);
-        assert!( f_2.city == s_a.city );
+        let f_2 = kruskal::find_set(set_d.clone(), &sets);
+        assert!( f_2.city == set_a.city );
 
-        let f_3 = kruskal::find_set(s_e.clone(), &sets);
-        assert!( f_3.city == s_a.city );
+        let f_3 = kruskal::find_set(set_e.clone(), &sets);
+        assert!( f_3.city == set_a.city );
     }
 
     #[test]
@@ -112,34 +109,32 @@ mod test {
         let c = City{id:2, name: String::from("c"), population:1, country: String::from("C"), latitude: 0.00, longitude: 0.00};
         let d = City{id:3, name: String::from("d"), population:1, country: String::from("D"), latitude: 0.00, longitude: 0.00};
         let e = City{id:4, name: String::from("e"), population:1, country: String::from("E"), latitude: 0.00, longitude: 0.00};
-        let s_a = kruskal::make_set(a);
-        let s_b = kruskal::make_set(b);
-        let s_c = kruskal::make_set(c);
-        let s_d = kruskal::make_set(d);
-        let s_e = kruskal::make_set(e);
-        let mut sets : Vec<DisjointSet> = vec![s_a,s_b,s_c,s_d,s_e];
+        let set_a = kruskal::make_set(a);
+        let set_b = kruskal::make_set(b);
+        let set_c = kruskal::make_set(c);
+        let set_d = kruskal::make_set(d);
+        let set_e = kruskal::make_set(e);
+        let mut sets : Vec<DisjointSet> = vec![set_a,set_b,set_c,set_d,set_e];
         kruskal::union(&mut sets, 0, 1);
         kruskal::union(&mut sets, 0, 2);
         kruskal::union(&mut sets, 2, 3);
         kruskal::union(&mut sets, 3, 4);
-        let s_a = &sets[0];
-        let s_b = &sets[1];
-        let s_c = &sets[2];
-        let s_d = &sets[3];
-        let s_e = &sets[4];
+        let set_a = &sets[0];
+        let set_b = &sets[1];
+        let set_c = &sets[2];
+        let set_d = &sets[3];
+        let set_e = &sets[4];
 
-        assert!(s_a.parent == -1);
-        assert!((&sets[s_b.parent as usize]).city == s_a.city);
-        assert!((&sets[s_c.parent as usize]).city == s_a.city);
-        assert!((&sets[s_d.parent as usize]).city == s_c.city);
-        assert!((&sets[s_e.parent as usize]).city == s_d.city);
+        assert!(set_a.parent == -1);
+        assert!((&sets[set_b.parent as usize]).city == set_a.city);
+        assert!((&sets[set_c.parent as usize]).city == set_a.city);
+        assert!((&sets[set_d.parent as usize]).city == set_c.city);
+        assert!((&sets[set_e.parent as usize]).city == set_d.city);
 
     }
 
     #[test]
     fn test_minimum_spanning_tree(){
-        let mut cities : Vec<City> = Vec::new();
-        let mut paths : Vec<Path> = Vec::new();
         let a = City{id:0, name: String::from("a"), population:1, country: String::from("A"), latitude: 0.00, longitude: 0.00};
         let b = City{id:1, name: String::from("b"), population:1, country: String::from("B"), latitude: 0.00, longitude: 0.00};
         let c = City{id:2, name: String::from("c"), population:1, country: String::from("C"), latitude: 0.00, longitude: 0.00};
@@ -149,7 +144,7 @@ mod test {
         let g = City{id:6, name: String::from("g"), population:1, country: String::from("G"), latitude: 0.00, longitude: 0.00};
         let h = City{id:7, name: String::from("h"), population:1, country: String::from("H"), latitude: 0.00, longitude: 0.00};
         let i = City{id:8, name: String::from("i"), population:1, country: String::from("I"), latitude: 0.00, longitude: 0.00};
-        cities = vec![a,b,c,d,e,f,g,h,i];
+        let mut cities : Vec<City> = vec![a,b,c,d,e,f,g,h,i];
         let ab = Path{id_city_1:0 ,id_city_2:1, distance:4.00};
         let ah = Path{id_city_1:0 ,id_city_2:7, distance:8.00};
         let bc = Path{id_city_1:1, id_city_2:2, distance:8.00};
@@ -164,7 +159,7 @@ mod test {
         let gh = Path{id_city_1:6, id_city_2:7, distance:1.00};
         let gi = Path{id_city_1:6, id_city_2:8, distance:6.00};
         let hi = Path{id_city_1:7, id_city_2:8, distance:7.00};
-        paths = vec![ab.clone(),ah.clone(),bc.clone(),bh.clone(),cd.clone(),cf.clone(),ci.clone(),de.clone(),df.clone(),ef.clone(),fg.clone(),gh.clone(),gi.clone(),hi.clone()];
+        let mut paths : Vec<Path> = vec![ab.clone(),ah.clone(),bc.clone(),bh.clone(),cd.clone(),cf.clone(),ci.clone(),de.clone(),df.clone(),ef.clone(),fg.clone(),gh.clone(),gi.clone(),hi.clone()];
         let minimum_spanning_tree : Vec<Path> = vec![ab,ah,ci,gh,fg,cf,cd,de];
         let result : Vec<Path> = kruskal::kruskal_algorithm(&mut cities, &mut paths);
         for path in &minimum_spanning_tree {

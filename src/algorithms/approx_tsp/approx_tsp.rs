@@ -1,8 +1,10 @@
 use crate::heuristics::path::Path as Path;
 use crate::heuristics::city::City as City;
+use crate::algorithms::kruskal::kruskal as kruskal;
 
-pub fn approximation_tsp(cities: &Vec<City>, minimum_spanning_tree: &Vec<Path>) -> Vec<City>{
+pub fn approximation_tsp(cities: &mut Vec<City>, paths: &mut Vec<Path>) -> Vec<City>{
     let mut new_cities : Vec<City> = Vec::new();
+    let minimum_spanning_tree = kruskal::kruskal_algorithm(cities, paths);
     let mut tree = minimum_spanning_tree.clone();
     while tree.len() != 0 {
         get_component(cities, &mut new_cities, &mut tree);
@@ -71,8 +73,6 @@ mod test {
 
     #[test]
     fn test_approximation_tsp(){
-        let mut cities : Vec<City> = Vec::new();
-        let mut paths : Vec<Path> = Vec::new();
         let a = City{id:0, name: String::from("a"), population:1, country: String::from("A"), latitude: 0.00, longitude: 0.00};
         let b = City{id:1, name: String::from("b"), population:1, country: String::from("B"), latitude: 0.00, longitude: 0.00};
         let c = City{id:2, name: String::from("c"), population:1, country: String::from("C"), latitude: 0.00, longitude: 0.00};
@@ -82,7 +82,7 @@ mod test {
         let g = City{id:6, name: String::from("g"), population:1, country: String::from("G"), latitude: 0.00, longitude: 0.00};
         let h = City{id:7, name: String::from("h"), population:1, country: String::from("H"), latitude: 0.00, longitude: 0.00};
         let i = City{id:8, name: String::from("i"), population:1, country: String::from("I"), latitude: 0.00, longitude: 0.00};
-        cities = vec![a.clone(),b.clone(),c.clone(),d.clone(),e.clone(),f.clone(),g.clone(),h.clone(),i.clone()];
+        let mut cities : Vec<City> = vec![a.clone(),b.clone(),c.clone(),d.clone(),e.clone(),f.clone(),g.clone(),h.clone(),i.clone()];
         let ab = Path{id_city_1:0 ,id_city_2:1, distance:4.00};
         let ah = Path{id_city_1:0 ,id_city_2:7, distance:8.00};
         let bc = Path{id_city_1:1, id_city_2:2, distance:8.00};
@@ -97,10 +97,9 @@ mod test {
         let gh = Path{id_city_1:6, id_city_2:7, distance:1.00};
         let gi = Path{id_city_1:6, id_city_2:8, distance:6.00};
         let hi = Path{id_city_1:7, id_city_2:8, distance:7.00};
-        paths = vec![ab.clone(),ah.clone(),bc.clone(),bh.clone(),cd.clone(),cf.clone(),ci.clone(),de.clone(),df.clone(),ef.clone(),fg.clone(),gh.clone(),gi.clone(),hi.clone()];
-        let minimum_spanning_tree : Vec<Path> = vec![gh,ci,fg,ab,cf,cd,ah,de];
+        let mut paths : Vec<Path> = vec![ab.clone(),ah.clone(),bc.clone(),bh.clone(),cd.clone(),cf.clone(),ci.clone(),de.clone(),df.clone(),ef.clone(),fg.clone(),gh.clone(),gi.clone(),hi.clone()];
         let tour : Vec<City> = vec![g,f,c,d,e,i,h,a,b];
-        let result = approx_tsp::approximation_tsp(&cities, &minimum_spanning_tree);
+        let result = approx_tsp::approximation_tsp(&mut cities, &mut paths);
         assert_eq!(tour.len(), result.len());
         for i in 0..tour.len() {
             assert_eq!(tour[i], result[i]);

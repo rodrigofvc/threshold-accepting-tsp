@@ -144,19 +144,20 @@ impl<'a> State<'a> {
      #[test]
      fn test_get_neighbor() {
          let (cities, paths) = init();
-         let initial = State::new(&paths, cities);
-         let neighbor = initial.get_neighbor(11);
+         let mut initial = State::new(&paths, cities, 10);
+         let initial_copy = initial.clone();
+         let (neighbor, _) = initial.get_neighbor();
          let changed = neighbor.tour.iter()
                                 .filter(|&x|
                                     neighbor.tour.iter().position(|y| *y == *x).unwrap() !=
-                                    initial.tour.iter().position(|z| *z == *x).unwrap());
+                                    initial_copy.tour.iter().position(|z| *z == *x).unwrap());
          assert_eq!(changed.count(), 2);
      }
 
      #[test]
      fn test_maximum_distance() {
         let (cities, paths) = init();
-        let initial = State::new(&paths, cities);
+        let initial = State::new(&paths, cities, 10);
         let max = initial.maximum_distance();
         assert_eq!(max, 1124687.0);
      }
@@ -164,7 +165,7 @@ impl<'a> State<'a> {
      #[test]
      fn test_feasible_solution() {
         let (cities, paths) = init();
-        let mut initial = State::new(&paths, cities);
+        let mut initial = State::new(&paths, cities, 10);
         let mut feasible = initial.is_feasible();
         assert!(feasible);
         let other = City::new(10, String::from("other"), String::from("Other"), 0, 6.4, 41.0);
@@ -182,7 +183,7 @@ impl<'a> State<'a> {
      #[test]
      fn test_normalizer() {
          let (cities, paths) = init();
-         let mut initial = State::new(&paths, cities);
+         let mut initial = State::new(&paths, cities, 10);
          let mut nm = 1124687.0 + 42353.6 + 23467.5 + 16498.7;
          assert_eq!(initial.normalizer(), nm);
          let f = City::new(6, String::from("f"), String::from("F"), 0, 36.5, 63.7);
@@ -198,7 +199,7 @@ impl<'a> State<'a> {
      #[test]
      fn test_cost() {
          let (cities, paths) = init();
-         let mut initial = State::new(&paths, cities);
+         let mut initial = State::new(&paths, cities, 10);
          let mut nm = 1124687.0 + 42353.6 + 23467.5 + 16498.7;
          let mut cost;
          cost = 12345.3 + 5383.9 + 3426.6 + 23467.5;
