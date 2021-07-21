@@ -12,7 +12,7 @@ pub fn threshold_accepting(initial_state: State, iterations: u32, mut temperatur
         q = f64::INFINITY;
         while p <= q {
             q = p;
-            let (a, new_state) = get_lot(temperature, current_state, iterations);
+            let (a, new_state) = get_batch(temperature, current_state, iterations);
             p = a;
             current_state = new_state;
         }
@@ -25,7 +25,7 @@ pub fn threshold_accepting(initial_state: State, iterations: u32, mut temperatur
 }
 
 
-fn get_lot<'a>(temperature: f64, initial: State<'a>, iterations: u32) -> (f64, State<'a>) {
+fn get_batch<'a>(temperature: f64, initial: State<'a>, iterations: u32) -> (f64, State<'a>) {
     let mut c : u32 = 0;
     let mut r : f64 = 0.0;
     let mut attemps = iterations * 2;
@@ -39,6 +39,9 @@ fn get_lot<'a>(temperature: f64, initial: State<'a>, iterations: u32) -> (f64, S
         }
         attemps -= 1;
     }
-    let prom = r/(iterations as f64);
+    let mut prom = r/(iterations as f64);
+    if c == 0 {
+        prom = -1.0;
+    }
     return (prom, current);
 }

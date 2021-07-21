@@ -28,18 +28,19 @@ fn main() {
     let mut paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| *y == x.city_1) && cities.iter().any(|y| *y == x.city_2) ).collect();
     let new_cities = approx_tsp::approximation_tsp(&mut cities, &mut paths);
     let initial = State::new(&paths, new_cities.clone(), *seed);
-
+    /*
     println!(" N {:#?}", initial.normalizer());
     println!(" C {:#?}", initial.cost());
     println!(" M {:#?}", initial.maximum_distance());
-
+    */
     let iterations = 100;
     let temperature = 1000.0;
     let decrement = 0.9;
-    let epsilon = 40.0;
+    let epsilon = 0.90;
     let start = Instant::now();
     let best = th_acp::threshold_accepting(initial, iterations, temperature, decrement, epsilon);
     let duration = start.elapsed().as_secs();
+    println!("\n >>>>>>>>>>>>>>>>>>>>>>>>>>>", );
     println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?}", best.to_string(), best.cost());
     println!(" Tiempo: {:?} segundos", duration);
     write_file(best);
