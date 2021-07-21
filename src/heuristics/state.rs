@@ -46,7 +46,7 @@ impl<'a> State<'a> {
         let normalizer = self.normalizer();
         let max_distance = self.maximum_distance();
         for i in 1..self.tour.len() {
-            let is_contained = self.paths.iter().find(|&x| x.city_1 == self.tour[i-1] && x.city_2 == self.tour[i] );
+            let is_contained = self.paths.iter().find(|&x| (x.city_1 == self.tour[i-1] && x.city_2 == self.tour[i]) || x.city_2 == self.tour[i-1] && x.city_1 == self.tour[i] );
             match is_contained {
                 Some(path) => {
                     sum += path.distance;
