@@ -1,6 +1,6 @@
 use rand::{Rng, SeedableRng, StdRng};
-use crate::heuristics::city::City as City;
-use crate::heuristics::path::Path as Path;
+use crate::graph::city::City as City;
+use crate::graph::path::Path as Path;
 
 #[derive(Clone, Debug)]
 pub struct State<'a> {
@@ -46,7 +46,7 @@ impl<'a> State<'a> {
         let normalizer = self.normalizer();
         let max_distance = self.maximum_distance();
         for i in 1..self.tour.len() {
-            let is_contained = self.paths.iter().find(|&x| x.id_city_1 == self.tour[i-1].id && x.id_city_2 == self.tour[i].id );
+            let is_contained = self.paths.iter().find(|&x| x.city_1 == self.tour[i-1] && x.city_2 == self.tour[i] );
             match is_contained {
                 Some(path) => {
                     sum += path.distance;
@@ -67,8 +67,8 @@ impl<'a> State<'a> {
         for i in 0..self.tour.len() {
             for j in i+1..self.tour.len() {
                 let is_contained = self.paths.iter()
-                                        .find(|&x| (x.id_city_1 == self.tour[i].id && x.id_city_2 == self.tour[j].id) ||
-                                                   (x.id_city_2 == self.tour[i].id && x.id_city_1 == self.tour[j].id) );
+                                        .find(|&x| (x.city_1 == self.tour[i] && x.city_2 == self.tour[j]) ||
+                                                   (x.city_2 == self.tour[i] && x.city_1 == self.tour[j]) );
                 match is_contained {
                     Some(path) => {
                         greater_weights.push(path.distance);
@@ -86,8 +86,8 @@ impl<'a> State<'a> {
 
     pub fn maximum_distance(&self) -> f64{
         let iter = self.paths.iter().
-                        filter(|&x| self.tour.iter().any(|y| y.id == x.id_city_1 ) &&
-                                    self.tour.iter().any(|z| z.id == x.id_city_2 ) );
+                        filter(|&x| self.tour.iter().any(|y| *y == x.city_1 ) &&
+                                    self.tour.iter().any(|z| *z == x.city_2 ) );
         let max_path = iter.max_by(|x,y|x.cmp(y)).unwrap();
         max_path.distance
     }
@@ -95,7 +95,7 @@ impl<'a> State<'a> {
     #[allow(dead_code)]
     pub fn is_feasible(&self) -> bool {
         for i in 1..self.tour.len() {
-            let is_path = self.paths.iter().find(|&x| x.id_city_1 == self.tour[i-1].id && x.id_city_2 == self.tour[i].id);
+            let is_path = self.paths.iter().find(|&x| x.city_1 == self.tour[i-1] && x.city_2 == self.tour[i]);
             if is_path == None {
                 return false;
             }
@@ -137,8 +137,8 @@ impl<'a> State<'a> {
 
 #[cfg(test)]
  mod tests {
-     use crate::heuristics::city::City as City;
-     use crate::heuristics::path::Path as Path;
+     use crate::graph::city::City as City;
+     use crate::graph::path::Path as Path;
      use crate::heuristics::state::State as State;
 
      #[test]
@@ -173,7 +173,9 @@ impl<'a> State<'a> {
         feasible = initial.is_feasible();
         assert!(!feasible);
         let mut paths_ = paths.clone();
-        let a = Path::new(5, 10, 1223565.3);
+        let e = City::new(5, String::from("e"), String::from("E"), 0, 76.4, 43.0);
+        let j = City::new(10, String::from("j"), String::from("J"), 0, 16.3, 32.0);
+        let a = Path::new(e, j, 1223565.3);
         paths_.push(a);
         initial.paths = &paths_;
         feasible = initial.is_feasible();
@@ -186,8 +188,9 @@ impl<'a> State<'a> {
          let mut initial = State::new(&paths, cities, 10);
          let mut nm = 1124687.0 + 42353.6 + 23467.5 + 16498.7;
          assert_eq!(initial.normalizer(), nm);
+         let e = City::new(5, String::from("e"), String::from("E"), 0, 76.4, 43.0);
          let f = City::new(6, String::from("f"), String::from("F"), 0, 36.5, 63.7);
-         let ef = Path::new(5, 6, 17934576.5);
+         let ef = Path::new(e, f.clone(), 17934576.5);
          let mut paths_ = initial.paths.clone();
          paths_.push(ef);
          initial.tour.push(f);
@@ -205,9 +208,9 @@ impl<'a> State<'a> {
          cost = 12345.3 + 5383.9 + 3426.6 + 23467.5;
          cost /= nm;
          assert_eq!(initial.cost(), cost);
-
+         let e = City::new(5, String::from("e"), String::from("E"), 0, 76.4, 43.0);
          let f = City::new(6, String::from("f"), String::from("F"), 0, 36.5, 63.7);
-         let ef = Path::new(5, 6, 17934576.5);
+         let ef = Path::new(e, f.clone(), 17934576.5);
          let mut paths_ = initial.paths.clone();
          paths_.push(ef);
          initial.tour.push(f);
@@ -232,22 +235,26 @@ impl<'a> State<'a> {
         let c = City::new(3, String::from("c"), String::from("C"), 0, 96.0, 43.0);
         let d = City::new(4, String::from("d"), String::from("D"), 0, 03.7, 21.9);
         let e = City::new(5, String::from("e"), String::from("E"), 0, 76.4, 43.0);
-        let cities = vec![a,b,c,d,e];
-        let ab = Path::new(1, 2, 12345.3);
-        let ac = Path::new(1, 3, 42353.6);
-        let ad = Path::new(1, 4, 16498.7);
-        let ae = Path::new(1, 5, 2322.8);
-        let bc = Path::new(2, 3, 5383.9);
-        let bd = Path::new(2, 4, 3858.1);
-        let be = Path::new(2, 5, 1124687.0);
-        let cd = Path::new(3, 4, 3426.6);
-        let ce = Path::new(3, 5, 2347.4);
-        let de = Path::new(4, 5, 23467.5);
-        let fg = Path::new(6, 7, 23467112.5);
-        let fh = Path::new(6, 8, 762346456.2);
-        let fj = Path::new(6, 9, 92341007.43);
-        let hj = Path::new(8, 9, 497945123.5);
-        let paths = vec![ab,ac,ad,ae,bc,bd,be,cd,ce,de,fg,fh,fj,hj];
+        let f = City::new(6, String::from("f"), String::from("F"), 0, 23.3, 12.5);
+        let g = City::new(7, String::from("g"), String::from("G"), 0, 12.5, 42.0);
+        let h = City::new(8, String::from("h"), String::from("H"), 0, 63.6, 34.2);
+        let i = City::new(9, String::from("i"), String::from("I"), 0, 75.2, 85.6);
+        let cities = vec![a.clone(),b.clone(),c.clone(),d.clone(),e.clone()];
+        let ab = Path::new(a.clone(), b.clone(), 12345.3);
+        let ac = Path::new(a.clone(), c.clone(), 42353.6);
+        let ad = Path::new(a.clone(), d.clone(), 16498.7);
+        let ae = Path::new(a.clone(), e.clone(), 2322.8);
+        let bc = Path::new(b.clone(), c.clone(), 5383.9);
+        let bd = Path::new(b.clone(), d.clone(), 3858.1);
+        let be = Path::new(b.clone(), e.clone(), 1124687.0);
+        let cd = Path::new(c.clone(), d.clone(), 3426.6);
+        let ce = Path::new(c.clone(), e.clone(), 2347.4);
+        let de = Path::new(d.clone(), e.clone(), 23467.5);
+        let fg = Path::new(f.clone(), g.clone(), 23467112.5);
+        let fh = Path::new(f.clone(), h.clone(), 762346456.2);
+        let fi = Path::new(f.clone(), i.clone(), 92341007.43);
+        let hi = Path::new(h.clone(), i.clone(), 497945123.5);
+        let paths = vec![ab,ac,ad,ae,bc,bd,be,cd,ce,de,fg,fh,fi,hi];
         (cities, paths)
     }
  }

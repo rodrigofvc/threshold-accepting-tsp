@@ -1,4 +1,4 @@
-use crate::heuristics::city::City as City;
+use crate::graph::city::City as City;
 
 #[derive(Debug, Clone)]
 pub struct DisjointSet {

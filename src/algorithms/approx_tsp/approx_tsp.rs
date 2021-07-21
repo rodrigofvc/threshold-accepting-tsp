@@ -1,5 +1,5 @@
-use crate::heuristics::path::Path as Path;
-use crate::heuristics::city::City as City;
+use crate::graph::path::Path as Path;
+use crate::graph::city::City as City;
 use crate::algorithms::kruskal::kruskal as kruskal;
 
 pub fn approximation_tsp(cities: &mut Vec<City>, paths: &mut Vec<Path>) -> Vec<City>{
@@ -22,7 +22,7 @@ fn get_component(cities: &Vec<City>, new_cities: &mut Vec<City>, tree: &mut Vec<
     let root = tree[0].clone();
 
     let mut stack : Vec<u32> = Vec::new();
-    stack.insert(0, root.id_city_1);
+    stack.insert(0, root.city_1.id);
     while stack.len() > 0 {
         let current = stack.remove(0);
         let is_marked = marked_cities.iter().find(|&&x| x == current);
@@ -30,7 +30,7 @@ fn get_component(cities: &Vec<City>, new_cities: &mut Vec<City>, tree: &mut Vec<
             Some(_) => continue,
             None => {},
         }
-        let mut neighbors_path = tree.iter().filter(|x| x.id_city_1 == current || x.id_city_2 == current);
+        let mut neighbors_path = tree.iter().filter(|x| x.city_1.id == current || x.city_2.id == current);
         let mut iter = neighbors_path.next();
         while iter != None {
             let path = iter.unwrap();
@@ -39,10 +39,10 @@ fn get_component(cities: &Vec<City>, new_cities: &mut Vec<City>, tree: &mut Vec<
                 Some(_) => {},
                 None => maked_paths.push(path.clone()),
             }
-            if current != path.id_city_2 {
-                stack.insert(0, path.id_city_2);
+            if current != path.city_2.id {
+                stack.insert(0, path.city_2.id);
             } else {
-                stack.insert(0, path.id_city_1);
+                stack.insert(0, path.city_1.id);
             }
             iter = neighbors_path.next();
         }
@@ -67,8 +67,8 @@ fn get_component(cities: &Vec<City>, new_cities: &mut Vec<City>, tree: &mut Vec<
 
 #[cfg(test)]
 mod test {
-    use crate::heuristics::city::City as City;
-    use crate::heuristics::path::Path as Path;
+    use crate::graph::city::City as City;
+    use crate::graph::path::Path as Path;
     use crate::algorithms::approx_tsp::approx_tsp as approx_tsp;
 
     #[test]
@@ -83,20 +83,20 @@ mod test {
         let h = City{id:7, name: String::from("h"), population:1, country: String::from("H"), latitude: 0.00, longitude: 0.00};
         let i = City{id:8, name: String::from("i"), population:1, country: String::from("I"), latitude: 0.00, longitude: 0.00};
         let mut cities : Vec<City> = vec![a.clone(),b.clone(),c.clone(),d.clone(),e.clone(),f.clone(),g.clone(),h.clone(),i.clone()];
-        let ab = Path{id_city_1:0 ,id_city_2:1, distance:4.00};
-        let ah = Path{id_city_1:0 ,id_city_2:7, distance:8.00};
-        let bc = Path{id_city_1:1, id_city_2:2, distance:8.00};
-        let bh = Path{id_city_1:1, id_city_2:7, distance:11.00};
-        let cd = Path{id_city_1:2, id_city_2:3, distance:7.00};
-        let cf = Path{id_city_1:2, id_city_2:5, distance:4.00};
-        let ci = Path{id_city_1:2, id_city_2:8, distance:2.00};
-        let de = Path{id_city_1:3, id_city_2:4, distance:9.00};
-        let df = Path{id_city_1:3, id_city_2:5, distance:14.00};
-        let ef = Path{id_city_1:4, id_city_2:5, distance:10.00};
-        let fg = Path{id_city_1:5, id_city_2:6, distance:2.00};
-        let gh = Path{id_city_1:6, id_city_2:7, distance:1.00};
-        let gi = Path{id_city_1:6, id_city_2:8, distance:6.00};
-        let hi = Path{id_city_1:7, id_city_2:8, distance:7.00};
+        let ab = Path{city_1:a.clone(), city_2:b.clone(), distance:4.00};
+        let ah = Path{city_1:a.clone() ,city_2:h.clone(), distance:8.00};
+        let bc = Path{city_1:b.clone(), city_2:c.clone(), distance:8.00};
+        let bh = Path{city_1:b.clone(), city_2:h.clone(), distance:11.00};
+        let cd = Path{city_1:c.clone(), city_2:d.clone(), distance:7.00};
+        let cf = Path{city_1:c.clone(), city_2:f.clone(), distance:4.00};
+        let ci = Path{city_1:c.clone(), city_2:i.clone(), distance:2.00};
+        let de = Path{city_1:d.clone(), city_2:e.clone(), distance:9.00};
+        let df = Path{city_1:d.clone(), city_2:f.clone(), distance:14.00};
+        let ef = Path{city_1:e.clone(), city_2:f.clone(), distance:10.00};
+        let fg = Path{city_1:f.clone(), city_2:g.clone(), distance:2.00};
+        let gh = Path{city_1:g.clone(), city_2:h.clone(), distance:1.00};
+        let gi = Path{city_1:g.clone(), city_2:i.clone(), distance:6.00};
+        let hi = Path{city_1:h.clone(), city_2:i.clone(), distance:7.00};
         let mut paths : Vec<Path> = vec![ab.clone(),ah.clone(),bc.clone(),bh.clone(),cd.clone(),cf.clone(),ci.clone(),de.clone(),df.clone(),ef.clone(),fg.clone(),gh.clone(),gi.clone(),hi.clone()];
         let tour : Vec<City> = vec![g,f,c,d,e,i,h,a,b];
         let result = approx_tsp::approximation_tsp(&mut cities, &mut paths);

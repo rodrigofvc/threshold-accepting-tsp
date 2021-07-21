@@ -79,9 +79,9 @@ impl Ord for City {
 mod tests {
     #[test]
     fn test_distance(){
-        let a = crate::heuristics::city::City::new(1, String::from("Tokyo"), String::from("Japan"), 31480498,35.685000000000002273,139.75100000000000477);
-        let b = crate::heuristics::city::City::new(7, String::from("Manila"), String::from("Philippines"), 10443877,14.604200000000000514,120.98199999999999931);
-        let c = crate::heuristics::city::City::new(9, String::from("Seoul"), String::from("South Korea"), 10323448,37.598500000000001364,126.97799999999999443);
+        let a = crate::graph::city::City::new(1, String::from("Tokyo"), String::from("Japan"), 31480498,35.685000000000002273,139.75100000000000477);
+        let b = crate::graph::city::City::new(7, String::from("Manila"), String::from("Philippines"), 10443877,14.604200000000000514,120.98199999999999931);
+        let c = crate::graph::city::City::new(9, String::from("Seoul"), String::from("South Korea"), 10323448,37.598500000000001364,126.97799999999999443);
         let mut distance = a.get_distance(b);
         assert!((2000000.0..3100000.0).contains(&distance));
         distance = a.get_distance(c);

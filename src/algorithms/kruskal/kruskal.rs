@@ -1,5 +1,5 @@
-use crate::heuristics::city::City as City;
-use crate::heuristics::path::Path as Path;
+use crate::graph::city::City as City;
+use crate::graph::path::Path as Path;
 use super::disjoint_set::DisjointSet as DisjointSet;
 
 pub fn kruskal_algorithm(cities: &mut Vec<City>, paths: &mut Vec<Path>) -> Vec<Path> {
@@ -12,15 +12,15 @@ pub fn kruskal_algorithm(cities: &mut Vec<City>, paths: &mut Vec<Path>) -> Vec<P
     paths.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     for path in paths.clone() {
-        let city_1 = cities.iter().find(|x| x.id == path.id_city_1).unwrap();
-        let city_2 = cities.iter().find(|x| x.id == path.id_city_2).unwrap();
-        let i = disjoint_sets.iter().position(|x| x.city.id == city_1.id).unwrap();
-        let j = disjoint_sets.iter().position(|x| x.city.id == city_2.id).unwrap();
+        let city_1 = cities.iter().find(|&x| *x == path.city_1).unwrap();
+        let city_2 = cities.iter().find(|&x| *x == path.city_2).unwrap();
+        let i = disjoint_sets.iter().position(|x| x.city == *city_1).unwrap();
+        let j = disjoint_sets.iter().position(|x| x.city == *city_2).unwrap();
 
         let disjoint_set_1 = &disjoint_sets[i];
         let disjoint_set_2 = &disjoint_sets[j];
 
-        if find_set(disjoint_set_1.clone(), &disjoint_sets).city.id != find_set(disjoint_set_2.clone(), &disjoint_sets).city.id {
+        if find_set(disjoint_set_1.clone(), &disjoint_sets).city != find_set(disjoint_set_2.clone(), &disjoint_sets).city {
             tree.push(path.clone());
             union(&mut disjoint_sets, i, j);
         }
@@ -50,8 +50,8 @@ fn make_set(city: City) -> DisjointSet {
 
 #[cfg(test)]
 mod test {
-    use crate::heuristics::city::City as City;
-    use crate::heuristics::path::Path as Path;
+    use crate::graph::city::City as City;
+    use crate::graph::path::Path as Path;
     use crate::algorithms::kruskal::disjoint_set::DisjointSet as DisjointSet;
     use crate::algorithms::kruskal::kruskal as kruskal;
 
@@ -144,21 +144,21 @@ mod test {
         let g = City{id:6, name: String::from("g"), population:1, country: String::from("G"), latitude: 0.00, longitude: 0.00};
         let h = City{id:7, name: String::from("h"), population:1, country: String::from("H"), latitude: 0.00, longitude: 0.00};
         let i = City{id:8, name: String::from("i"), population:1, country: String::from("I"), latitude: 0.00, longitude: 0.00};
-        let mut cities : Vec<City> = vec![a,b,c,d,e,f,g,h,i];
-        let ab = Path{id_city_1:0 ,id_city_2:1, distance:4.00};
-        let ah = Path{id_city_1:0 ,id_city_2:7, distance:8.00};
-        let bc = Path{id_city_1:1, id_city_2:2, distance:8.00};
-        let bh = Path{id_city_1:1, id_city_2:7, distance:11.00};
-        let cd = Path{id_city_1:2, id_city_2:3, distance:7.00};
-        let cf = Path{id_city_1:2, id_city_2:5, distance:4.00};
-        let ci = Path{id_city_1:2, id_city_2:8, distance:2.00};
-        let de = Path{id_city_1:3, id_city_2:4, distance:9.00};
-        let df = Path{id_city_1:3, id_city_2:5, distance:14.00};
-        let ef = Path{id_city_1:4, id_city_2:5, distance:10.00};
-        let fg = Path{id_city_1:5, id_city_2:6, distance:2.00};
-        let gh = Path{id_city_1:6, id_city_2:7, distance:1.00};
-        let gi = Path{id_city_1:6, id_city_2:8, distance:6.00};
-        let hi = Path{id_city_1:7, id_city_2:8, distance:7.00};
+        let mut cities : Vec<City> = vec![a.clone(),b.clone(),c.clone(),d.clone(),e.clone(),f.clone(),g.clone(),h.clone(),i.clone()];
+        let ab = Path{city_1:a.clone(), city_2:b.clone(), distance:4.00};
+        let ah = Path{city_1:a.clone(), city_2:h.clone(), distance:8.00};
+        let bc = Path{city_1:b.clone(), city_2:c.clone(), distance:8.00};
+        let bh = Path{city_1:b.clone(), city_2:h.clone(), distance:11.00};
+        let cd = Path{city_1:c.clone(), city_2:d.clone(), distance:7.00};
+        let cf = Path{city_1:c.clone(), city_2:f.clone(), distance:4.00};
+        let ci = Path{city_1:c.clone(), city_2:i.clone(), distance:2.00};
+        let de = Path{city_1:d.clone(), city_2:e.clone(), distance:9.00};
+        let df = Path{city_1:d.clone(), city_2:f.clone(), distance:14.00};
+        let ef = Path{city_1:e.clone(), city_2:f.clone(), distance:10.00};
+        let fg = Path{city_1:f.clone(), city_2:g.clone(), distance:2.00};
+        let gh = Path{city_1:g.clone(), city_2:h.clone(), distance:1.00};
+        let gi = Path{city_1:g.clone(), city_2:i.clone(), distance:6.00};
+        let hi = Path{city_1:h.clone(), city_2:i.clone(), distance:7.00};
         let mut paths : Vec<Path> = vec![ab.clone(),ah.clone(),bc.clone(),bh.clone(),cd.clone(),cf.clone(),ci.clone(),de.clone(),df.clone(),ef.clone(),fg.clone(),gh.clone(),gi.clone(),hi.clone()];
         let minimum_spanning_tree : Vec<Path> = vec![ab,ah,ci,gh,fg,cf,cd,de];
         let result : Vec<Path> = kruskal::kruskal_algorithm(&mut cities, &mut paths);

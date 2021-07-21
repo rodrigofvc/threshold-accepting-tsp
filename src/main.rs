@@ -1,18 +1,18 @@
 mod heuristics;
 mod algorithms;
+mod graph;
 use std::env;
 use std::fs;
 use std::time::Instant;
 use rusqlite::{Connection, Result};
+use crate::graph::city::City as City;
+use crate::graph::path::Path as Path;
 use crate::heuristics::state::State as State;
-use crate::heuristics::city::City as City;
-use crate::heuristics::path::Path as Path;
 use crate::heuristics::threshold_accepting as th_acp;
 use crate::algorithms::approx_tsp::approx_tsp as approx_tsp;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let start = Instant::now();
     let seed = &args[1].parse::<u64>().unwrap();
     let path_file = &args[2];
     let instance = read_file(path_file.to_string());
@@ -25,7 +25,7 @@ fn main() {
     }
 
     let mut cities : Vec<City> = cities.into_iter().filter(|x| instance.iter().any(|&y| y == x.id) ).collect();
-    let mut paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| y.id == x.id_city_1) && cities.iter().any(|y| y.id == x.id_city_2) ).collect();
+    let mut paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| *y == x.city_1) && cities.iter().any(|y| *y == x.city_2) ).collect();
     let new_cities = approx_tsp::approximation_tsp(&mut cities, &mut paths);
     let initial = State::new(&paths, new_cities.clone(), *seed);
 
@@ -37,6 +37,7 @@ fn main() {
     let temperature = 1000.0;
     let decrement = 0.9;
     let epsilon = 40.0;
+    let start = Instant::now();
     let best = th_acp::threshold_accepting(initial, iterations, temperature, decrement, epsilon);
     let duration = start.elapsed().as_secs();
     println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?}", best.to_string(), best.cost());
@@ -74,17 +75,24 @@ fn read (paths: &mut Vec<Path>, cities: &mut Vec<City>) -> Result<()> {
 
     let paths_ = stmt_paths.query_map([], |row| {
         Ok(
-            Path {
-                id_city_1: row.get(0)?,
-                id_city_2: row.get(1)?,
-                distance: row.get(2)?,
-            }
+            get_path(&cities, row.get(0)?, row.get(1)?, row.get(2)?).unwrap()
         )
     })?;
     for path in paths_ {
         paths.push(path.unwrap());
     }
     Ok(())
+}
+
+fn get_path(cities: &Vec<City>, id_city_1: u32, id_city_2: u32, distance: f64) -> Result<Path,> {
+    let city_1 = cities.iter().find(|&x| x.id == id_city_1).unwrap();
+    let city_2 = cities.iter().find(|&x| x.id == id_city_2).unwrap();
+    let path = Path {
+        city_1: city_1.clone(),
+        city_2: city_2.clone(),
+        distance: distance,
+    };
+    Ok(path)
 }
 
 fn read_file(path_file: String) -> Vec<u32> {

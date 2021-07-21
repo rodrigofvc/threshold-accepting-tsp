@@ -1,23 +1,24 @@
 use core::cmp::Ordering;
+use super::city::City as City;
 
 #[derive(Clone, Debug)]
 pub struct Path {
-    pub id_city_1: u32,
-    pub id_city_2: u32,
+    pub city_1: City,
+    pub city_2: City,
     pub distance: f64,
 }
 
 impl Path {
     #[allow(dead_code)]
-    pub fn new(id_city_1: u32, id_city_2: u32, distance: f64) -> Path {
-        Path {id_city_1, id_city_2, distance}
+    pub fn new(city_1: City, city_2: City, distance: f64) -> Path {
+        Path {city_1, city_2, distance}
     }
 }
 
 impl PartialEq for Path {
     fn eq(&self, other : &Self) -> bool {
-        self.id_city_1 == other.id_city_1 &&
-        self.id_city_2 == other.id_city_2 &&
+        self.city_1 == other.city_1 &&
+        self.city_2 == other.city_2 &&
         self.distance == other.distance
     }
 }
