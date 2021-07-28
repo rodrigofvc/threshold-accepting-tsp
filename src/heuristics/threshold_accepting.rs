@@ -5,7 +5,9 @@ use crate::heuristics::state::State as State;
 * Return the best solution found.
 */
 pub fn threshold_accepting(initial_state: State, iterations: u32, mut temperature: f64, decrement: f64, epsilon: f64) -> State {
-    let mut current_state = initial_state.clone();
+    let mut current_state = initial_state;
+    let probability : f64 = 0.89;
+    temperature = initial_temperature(&mut current_state, temperature, probability);
     let mut p : f64 = 0.0;
     let mut q : f64;
     while temperature > epsilon {
@@ -22,6 +24,64 @@ pub fn threshold_accepting(initial_state: State, iterations: u32, mut temperatur
         temperature *= decrement;
     }
     return current_state;
+}
+
+pub fn initial_temperature(current_state: &mut State, mut temperature: f64, probability: f64) -> f64{
+    let mut p : f64 = accepted_percent(current_state, temperature);
+    let temperature_1 : f64;
+    let temperature_2 : f64;
+    let epsilon_p = 0.50;
+    if (probability - p).abs() <= epsilon_p {
+        return temperature;
+    }
+    if p <= probability {
+        while p <= probability {
+            temperature *= 2.0;
+            p = accepted_percent(current_state, temperature);
+        }
+        temperature_1 = temperature/2.0;
+        temperature_2 = temperature;
+    } else {
+        while p > probability {
+            temperature /= 2.0;
+            p = accepted_percent(current_state, temperature);
+        }
+        temperature_1 = temperature;
+        temperature_2 = temperature * 2.0;
+    }
+    return binary_search(current_state, temperature_1, temperature_2, probability);
+}
+
+fn accepted_percent(current_state: &mut State, temperature: f64)  -> f64 {
+    let mut c = 0;
+    let n = 300;
+    for _ in 0..n {
+        let (neighbor, (i,j)) = current_state.get_neighbor();
+        if neighbor.cost() <= current_state.cost() + temperature {
+            c += 1;
+            current_state.set_neighbor(i,j)
+        }
+    }
+    let prom = c as f64 / n as f64;
+    return prom;
+}
+
+
+fn binary_search(current_state: &mut State, temperature_1: f64, temperature_2: f64, probability: f64) -> f64 {
+    let middle = (temperature_1 + temperature_2) / 2.00;
+    let epsilon_p = 0.50;
+    if temperature_2 - temperature_1 <  epsilon_p {
+        return middle;
+    }
+    let p = accepted_percent(current_state, middle);
+    if (probability - p).abs() < epsilon_p {
+        return middle;
+    }
+    if p > probability {
+        return binary_search(current_state, temperature_1, middle, probability);
+    } else {
+        return binary_search(current_state, middle, temperature_2, probability);
+    }
 }
 
 

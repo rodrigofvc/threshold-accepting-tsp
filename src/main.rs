@@ -1,20 +1,21 @@
 mod heuristics;
-mod algorithms;
 mod graph;
 use std::env;
 use std::fs;
 use std::time::Instant;
+use std::io::Write;
 use rusqlite::{Connection, Result};
 use crate::graph::city::City as City;
 use crate::graph::path::Path as Path;
 use crate::heuristics::state::State as State;
 use crate::heuristics::threshold_accepting as th_acp;
-use crate::algorithms::approx_tsp::approx_tsp as approx_tsp;
 
+struct Best<'a>(State<'a>, u64, u64);
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let seed = &args[1].parse::<u64>().unwrap();
-    let path_file = &args[2];
+    let initial_seed = args[1].parse::<u64>().unwrap();
+    let final_seed = args[2].parse::<u64>().unwrap();
+    let path_file = &args[3];
     let instance = read_file(path_file.to_string());
     let mut paths : Vec<Path> = Vec::new();
     let mut cities : Vec<City> = Vec::new();
@@ -24,27 +25,40 @@ fn main() {
         Err(e) => { println!("{:?}", e) }
     }
 
-    let mut cities : Vec<City> = cities.into_iter().filter(|x| instance.iter().any(|&y| y == x.id) ).collect();
-    let mut paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| *y == x.city_1) && cities.iter().any(|y| *y == x.city_2) ).collect();
-    let new_cities = approx_tsp::approximation_tsp(&mut cities, &mut paths);
-    let initial = State::new(&paths, new_cities.clone(), *seed);
-    /*
-    println!(" N {:#?}", initial.normalizer());
-    println!(" C {:#?}", initial.cost());
-    println!(" M {:#?}", initial.maximum_distance());
-    */
+    let cities : Vec<City> = cities.into_iter().filter(|x| instance.iter().any(|&y| y == x.id) ).collect();
+    let paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| *y == x.city_1) && cities.iter().any(|y| *y == x.city_2) ).collect();
+    let seeds : Vec<u64> = (initial_seed..=final_seed).collect();
+
+    let init = State::new(&paths,  cities.clone(), initial_seed);
+    let mut current_best : Best = Best(init, initial_seed, 0);
+
+    let temperature = 2.0;
     let iterations = 100;
-    let temperature = 1000.0;
-    let decrement = 0.9;
-    let epsilon = 0.90;
-    let start = Instant::now();
-    let best = th_acp::threshold_accepting(initial, iterations, temperature, decrement, epsilon);
-    let duration = start.elapsed().as_secs();
-    println!("\n >>>>>>>>>>>>>>>>>>>>>>>>>>>", );
-    println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?}", best.to_string(), best.cost());
-    println!(" Tiempo: {:?} segundos", duration);
-    write_file(best);
+    let decrement = 0.99;
+    let epsilon = 0.0011;
+
+    for seed in seeds {
+        let initial = State::new(&paths,  cities.clone(), seed);
+        let start = Instant::now();
+        let current = th_acp::threshold_accepting(initial, iterations, temperature, decrement, epsilon);
+        let seconds = start.elapsed().as_secs();
+        println!("\n >>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        println!(" Solucion usando {} como semilla : \n {:?} \n Costo: {:?}", seed, current.to_string(), current.cost());
+        let minutes = seconds/60;
+        let hours = minutes/60;
+        println!(" Tiempo: {}:{}:{} hh:mm:ss", hours, minutes%60, seconds%60);
+        if current.cost() <= current_best.0.cost() {
+            current_best.0 = current.clone();
+            current_best.1 = seed;
+            current_best.2 = seconds;
+            write_log(&current_best);
+        }
+    }
+    println!("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ");
+    println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?} \n Semilla {:?} \n Tiempo {:?}", current_best.0.to_string(), current_best.0.cost(), current_best.1, current_best.2);
+    write_file(current_best.0);
 }
+
 
 fn read (paths: &mut Vec<Path>, cities: &mut Vec<City>) -> Result<()> {
     let conn = Connection::open("tsp_data.db")?;
@@ -129,4 +143,32 @@ fn write_file(state : State)  {
     let path = "data/data.dat";
     fs::File::create(path).expect("No se pudó crear un archivo");
     fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
+}
+
+fn write_log(sol: &Best){
+    let mut content  = String::new();
+    content.push_str("\n >>>>>>>>>>> Instancia: \n");
+    content.push_str(&sol.0.to_string());
+    content.push('\n');
+    content.push_str("Costo: ");
+    content.push_str(&sol.0.cost().to_string());
+    content.push(' ');
+    content.push_str("Semilla: ");
+    content.push_str(&sol.1.to_string());
+    content.push(' ');
+    content.push_str("Tiempo: ");
+    content.push_str(&sol.2.to_string());
+    let path = "log/log.dat";
+    if !std::path::Path::new(path).is_file() {
+        fs::File::create(path).expect("No se pudó crear un archivo");
+        fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
+    } else {
+        let mut file = fs::OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open(path)
+        .unwrap();
+
+        write!(file, "{}", content).expect("No se pudó escribir un archivo");
+    }
 }
