@@ -9,7 +9,7 @@ Threshold Accepting for TSP
 ### Build
 
 ```bash
-cargo build
+cargo build --release
 ```
 
 ### Input
@@ -29,7 +29,7 @@ A file with the `id` of every city with this format.
 `path_file`: The path of file with the id of every city.
 
 ```bash
-cargo run <seed> <path_file>
+cargo run --release <seed> <path_file>
 ```
 
 As result there is a file `data.dat` in `data` dir, which has the sorted coordinates of the best path found.
@@ -48,7 +48,7 @@ gnuplot load_graph.gp
 ### Example
 
 ```bash
-cargo run 654 examples/example-1.txt
+cargo run --release 654 examples/example-1.txt
 ```
 
 ### Test
