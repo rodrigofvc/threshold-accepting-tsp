@@ -54,7 +54,7 @@ pub fn initial_temperature(current_state: &mut State, mut temperature: f64, prob
 
 fn accepted_percent(current_state: &mut State, temperature: f64)  -> f64 {
     let mut c = 0;
-    let n = 300;
+    let n = 500;
     for _ in 0..n {
         let (neighbor, (i,j)) = current_state.get_neighbor();
         if neighbor.cost() <= current_state.cost() + temperature {
@@ -85,7 +85,7 @@ fn binary_search(current_state: &mut State, temperature_1: f64, temperature_2: f
 }
 
 
-fn get_batch<'a>(temperature: f64, initial: State<'a>, iterations: u32) -> (f64, State<'a>) {
+fn get_batch(temperature: f64, initial: State, iterations: u32) -> (f64, State) {
     let mut c : u32 = 0;
     let mut r : f64 = 0.0;
     let mut attemps = iterations * 2;

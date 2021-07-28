@@ -2,16 +2,16 @@ use rand::{Rng, SeedableRng, StdRng};
 use crate::graph::city::City as City;
 use crate::graph::path::Path as Path;
 
-#[derive(Clone, Debug)]
-pub struct State<'a> {
-    pub paths: &'a Vec<Path>,
+#[derive(Clone, Debug)] 
+pub struct State {
+    pub paths: Vec<Path>,
     pub tour: Vec<City>,
     rng: StdRng,
 }
 
 
-impl<'a> State<'a> {
-    pub fn new(paths: &'a Vec<Path>,  tour: Vec<City>, seed: u64) -> State<'a> {
+impl State {
+    pub fn new(paths: Vec<Path>,  tour: Vec<City>, seed: u64) -> State {
         State { paths:paths, tour, rng: SeedableRng::seed_from_u64(seed) }
     }
 
@@ -29,7 +29,7 @@ impl<'a> State<'a> {
         let tmp = self.tour[i].clone();
         tour_neighbor[i] = self.tour[j].clone();
         tour_neighbor[j] = tmp;
-        let neighbor = State { paths:self.paths, tour: tour_neighbor, rng: self.rng.clone()};
+        let neighbor = State { paths:self.paths.clone(), tour: tour_neighbor, rng: self.rng.clone()};
         (neighbor,(i,j))
     }
 

@@ -4,13 +4,14 @@ use std::env;
 use std::fs;
 use std::time::Instant;
 use std::io::Write;
+use std::thread;
 use rusqlite::{Connection, Result};
 use crate::graph::city::City as City;
 use crate::graph::path::Path as Path;
 use crate::heuristics::state::State as State;
+use crate::heuristics::thread_state::ThreadState as ThreadState;
 use crate::heuristics::threshold_accepting as th_acp;
 
-struct Best<'a>(State<'a>, u64, u64);
 fn main() {
     let args: Vec<String> = env::args().collect();
     let initial_seed = args[1].parse::<u64>().unwrap();
@@ -29,34 +30,38 @@ fn main() {
     let paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| *y == x.city_1) && cities.iter().any(|y| *y == x.city_2) ).collect();
     let seeds : Vec<u64> = (initial_seed..=final_seed).collect();
 
-    let init = State::new(&paths,  cities.clone(), initial_seed);
-    let mut current_best : Best = Best(init, initial_seed, 0);
-
     let temperature = 2.0;
-    let iterations = 100;
+    let iterations = 10;
     let decrement = 0.99;
     let epsilon = 0.0011;
 
+    let mut threads : Vec<std::thread::JoinHandle<ThreadState>> = vec![];
+
     for seed in seeds {
-        let initial = State::new(&paths,  cities.clone(), seed);
-        let start = Instant::now();
-        let current = th_acp::threshold_accepting(initial, iterations, temperature, decrement, epsilon);
-        let seconds = start.elapsed().as_secs();
-        println!("\n >>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        println!(" Solucion usando {} como semilla : \n {:?} \n Costo: {:?}", seed, current.to_string(), current.cost());
-        let minutes = seconds/60;
-        let hours = minutes/60;
-        println!(" Tiempo: {}:{}:{} hh:mm:ss", hours, minutes%60, seconds%60);
-        if current.cost() <= current_best.0.cost() {
-            current_best.0 = current.clone();
-            current_best.1 = seed;
-            current_best.2 = seconds;
-            write_log(&current_best);
-        }
+        let initial = State::new(paths.clone(),  cities.clone(), seed);
+        let handle = thread::spawn(move || {
+            let start = Instant::now();
+            let current = th_acp::threshold_accepting(initial.clone(), iterations, temperature, decrement, epsilon.clone());
+            let seconds = start.elapsed().as_secs();
+            let thread_state = ThreadState::new(current, seed, seconds);
+            write_log(&thread_state);
+            thread_state
+        });
+        threads.push(handle);
     }
+
+    let mut solutions :Vec<ThreadState> = vec![];
+    for thread in threads {
+        let thread_state = thread.join().unwrap();
+        solutions.push(thread_state);
+    }
+    solutions.sort_by(|a,b| a.state.cost().partial_cmp(&b.state.cost()).unwrap());
+    let best = solutions[0].clone();
+
     println!("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ");
-    println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?} \n Semilla {:?} \n Tiempo {:?}", current_best.0.to_string(), current_best.0.cost(), current_best.1, current_best.2);
-    write_file(current_best.0);
+    println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?} \n Semilla {:?} \n Tiempo {:?}", best.state.to_string(), best.state.cost(), best.seed, best.get_time());
+    write_file(best.state);
+
 }
 
 
@@ -145,19 +150,19 @@ fn write_file(state : State)  {
     fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
 }
 
-fn write_log(sol: &Best){
+fn write_log(sol: &ThreadState){
     let mut content  = String::new();
     content.push_str("\n >>>>>>>>>>> Instancia: \n");
-    content.push_str(&sol.0.to_string());
+    content.push_str(&sol.state.to_string());
     content.push('\n');
     content.push_str("Costo: ");
-    content.push_str(&sol.0.cost().to_string());
+    content.push_str(&sol.state.cost().to_string());
     content.push(' ');
     content.push_str("Semilla: ");
-    content.push_str(&sol.1.to_string());
+    content.push_str(&sol.seed.to_string());
     content.push(' ');
     content.push_str("Tiempo: ");
-    content.push_str(&sol.2.to_string());
+    content.push_str(&sol.get_time());
     let path = "log/log.dat";
     if !std::path::Path::new(path).is_file() {
         fs::File::create(path).expect("No se pudó crear un archivo");
@@ -168,7 +173,6 @@ fn write_log(sol: &Best){
         .append(true)
         .open(path)
         .unwrap();
-
         write!(file, "{}", content).expect("No se pudó escribir un archivo");
     }
 }
