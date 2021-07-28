@@ -14,7 +14,11 @@ cargo build --release
 
 ### Input
 
-A seed for pseudo-random numbers.
+A seed range `n m` for pseudo-random numbers.
+
+```
+n,n+1,n+2,..,m
+```
 
 A file with the `id` of every city with this format.
 
@@ -24,12 +28,14 @@ A file with the `id` of every city with this format.
 
 ### Run
 
-`seed`: The seed for pseudo-random numbers.
+`initial_seed`: The initial seed for range.
+
+`final_seed`: The final seed for range (inclusive).
 
 `path_file`: The path of file with the id of every city.
 
 ```bash
-cargo run --release <seed> <path_file>
+cargo run --release <initial_seed> <final_seed> <path_file>
 ```
 
 As result there is a file `data.dat` in `data` dir, which has the sorted coordinates of the best path found.
@@ -48,7 +54,7 @@ gnuplot load_graph.gp
 ### Example
 
 ```bash
-cargo run --release 654 examples/example-1.txt
+cargo run --release 1 10 examples/example-1.txt
 ```
 
 ### Test
