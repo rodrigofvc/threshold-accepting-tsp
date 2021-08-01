@@ -12,11 +12,20 @@ pub fn threshold_accepting(initial_state: State, iterations: u32, mut temperatur
     let mut q : f64;
     while temperature > epsilon {
         q = f64::INFINITY;
-        while p <= q {
+        let mut max_local_batch = 0;
+        'inner: while p <= q {
             q = p;
-            let (a, new_state) = get_batch(temperature, current_state, iterations);
+            let (a, new_state) = get_batch(temperature, current_state.clone(), iterations);
+            if max_local_batch == 20 {
+                break 'inner;
+            }
             p = a;
             current_state = new_state;
+            if a == -1.0 {
+                max_local_batch += 1;
+            } else {
+                max_local_batch = 0;
+            }
         }
         println!("\n >>>>>>>>>>>>>> \n Temperatura actual: {:?}", temperature);
         println!(" Instancia: {:?}", current_state.to_string());

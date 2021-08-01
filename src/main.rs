@@ -30,24 +30,23 @@ fn main() {
     let paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| *y == x.city_1) && cities.iter().any(|y| *y == x.city_2) ).collect();
     let seeds : Vec<u64> = (initial_seed..=final_seed).collect();
 
-    let temperature = 2.0;
-    let iterations = 10;
-    let decrement = 0.99;
-    let epsilon = 0.0011;
+    let temperature = 7.0;
+    let iterations = 200;
+    let decrement = 0.9;
+    let epsilon = 0.00001;
 
     let mut threads : Vec<std::thread::JoinHandle<ThreadState>> = vec![];
 
     for seed in seeds {
         let initial = State::new(paths.clone(),  cities.clone(), seed);
-        let handle = thread::spawn(move || {
+        let thread = thread::spawn(move || {
             let start = Instant::now();
             let current = th_acp::threshold_accepting(initial.clone(), iterations, temperature, decrement, epsilon.clone());
             let seconds = start.elapsed().as_secs();
             let thread_state = ThreadState::new(current, seed, seconds);
-            write_log(&thread_state);
             thread_state
         });
-        threads.push(handle);
+        threads.push(thread);
     }
 
     let mut solutions :Vec<ThreadState> = vec![];
@@ -57,9 +56,9 @@ fn main() {
     }
     solutions.sort_by(|a,b| a.state.cost().partial_cmp(&b.state.cost()).unwrap());
     let best = solutions[0].clone();
-
-    println!("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ");
-    println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?} \n Semilla {:?} \n Tiempo {:?}", best.state.to_string(), best.state.cost(), best.seed, best.get_time());
+    write_log(&best,iterations,temperature);
+    println!(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?} \n Semilla {:?} \n Tiempo {:?} Iteraciones: {} Temperatura: {}", best.state.to_string(), best.state.cost(), best.seed, best.get_time(),iterations,temperature);
     write_file(best.state);
 
 }
@@ -150,7 +149,7 @@ fn write_file(state : State)  {
     fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
 }
 
-fn write_log(sol: &ThreadState){
+fn write_log(sol: &ThreadState, iterations: u32, temperature: f64){
     let mut content  = String::new();
     content.push_str("\n >>>>>>>>>>> Instancia: \n");
     content.push_str(&sol.state.to_string());
@@ -163,6 +162,12 @@ fn write_log(sol: &ThreadState){
     content.push(' ');
     content.push_str("Tiempo: ");
     content.push_str(&sol.get_time());
+    content.push(' ');
+    content.push_str("Iteraciones: ");
+    content.push_str(&iterations.to_string());
+    content.push(' ');
+    content.push_str("Temperatura: ");
+    content.push_str(&temperature.to_string());
     let path = "log/log.dat";
     if !std::path::Path::new(path).is_file() {
         fs::File::create(path).expect("No se pudó crear un archivo");
