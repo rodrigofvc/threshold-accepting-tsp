@@ -11,7 +11,7 @@ set style line 1 \
 
 unset key
 
-set yrange [6000:19000]
+set yrange [0:4500000]
 set xrange [0:4300]
 
-plot 'log.dat' with linespoints linestyle 1
+plot 'log1.dat' with linespoints linestyle 1

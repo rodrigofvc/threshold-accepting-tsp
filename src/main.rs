@@ -31,8 +31,8 @@ fn main() {
     let seeds : Vec<u64> = (initial_seed..=final_seed).collect();
 
     let temperature = 7.0;
-    let iterations = 200;
-    let decrement = 0.9;
+    let iterations = 20;
+    let decrement = 0.99;
     let epsilon = 0.00001;
 
     let mut threads : Vec<std::thread::JoinHandle<ThreadState>> = vec![];
@@ -41,9 +41,9 @@ fn main() {
         let initial = State::new(paths.clone(),  cities.clone(), seed);
         let thread = thread::spawn(move || {
             let start = Instant::now();
-            let current = th_acp::threshold_accepting(initial.clone(), iterations, temperature, decrement, epsilon.clone());
+            let (current,log) = th_acp::threshold_accepting(initial.clone(), iterations, temperature, decrement, epsilon.clone());
             let seconds = start.elapsed().as_secs();
-            let thread_state = ThreadState::new(current, seed, seconds);
+            let thread_state = ThreadState::new(current, seed, seconds,log);
             thread_state
         });
         threads.push(thread);
@@ -168,6 +168,7 @@ fn write_log(sol: &ThreadState, iterations: u32, temperature: f64){
     content.push(' ');
     content.push_str("Temperatura: ");
     content.push_str(&temperature.to_string());
+    get_log(sol.log.clone());
     let path = "log/log.dat";
     if !std::path::Path::new(path).is_file() {
         fs::File::create(path).expect("No se pudó crear un archivo");
@@ -180,4 +181,24 @@ fn write_log(sol: &ThreadState, iterations: u32, temperature: f64){
         .unwrap();
         write!(file, "{}", content).expect("No se pudó escribir un archivo");
     }
+}
+
+/**
+* Given a vector with the cost of best state in each iteration,
+* create a file with the (x,y) coordinates.
+* log: vector with the cost value.
+*/
+fn get_log(log : Vec<String>)  {
+    let mut content = String::new();
+    let path = "log/log1.dat";
+    let mut pos = 20;
+    for l in log {
+        content.push_str(&pos.to_string());
+        content.push(' ');
+        content.push_str(&l);
+        content.push('\n');
+        pos += 20;
+    }
+    fs::File::create(path).expect("No se pudó crear un archivo");
+    fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
 }

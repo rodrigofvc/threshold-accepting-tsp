@@ -4,7 +4,8 @@ use crate::heuristics::state::State as State;
 * Threshold Accepting for TSP.
 * Return the best solution found.
 */
-pub fn threshold_accepting(initial_state: State, iterations: u32, mut temperature: f64, decrement: f64, epsilon: f64) -> State {
+pub fn threshold_accepting(initial_state: State, iterations: u32, mut temperature: f64, decrement: f64, epsilon: f64) -> (State,Vec<String>) {
+    let mut log : Vec<String> = vec![];
     let mut current_state = initial_state;
     let probability : f64 = 0.89;
     temperature = initial_temperature(&mut current_state, temperature, probability);
@@ -21,6 +22,7 @@ pub fn threshold_accepting(initial_state: State, iterations: u32, mut temperatur
             }
             p = a;
             current_state = new_state;
+            log.push(current_state.cost().to_string());
             if a == -1.0 {
                 max_local_batch += 1;
             } else {
@@ -32,7 +34,7 @@ pub fn threshold_accepting(initial_state: State, iterations: u32, mut temperatur
         println!(" Costo: {:?}",current_state.cost());
         temperature *= decrement;
     }
-    return current_state;
+    return (current_state,log);
 }
 
 pub fn initial_temperature(current_state: &mut State, mut temperature: f64, probability: f64) -> f64{

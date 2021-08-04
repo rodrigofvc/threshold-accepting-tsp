@@ -5,12 +5,13 @@ pub struct ThreadState {
     pub state: State,
     pub seed: u64,
     seconds: u64,
+    pub log: Vec<String>,
 }
 
 impl ThreadState {
 
-    pub fn new(state: State, seed: u64, seconds: u64) -> ThreadState {
-        ThreadState{state, seed, seconds}
+    pub fn new(state: State, seed: u64, seconds: u64, log: Vec<String>) -> ThreadState {
+        ThreadState{state, seed, seconds, log}
     }
 
     pub fn get_time(&self) -> String {
