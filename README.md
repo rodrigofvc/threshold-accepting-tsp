@@ -38,7 +38,7 @@ A file with the `id` of every city with this format.
 cargo run --release <initial_seed> <final_seed> <path_file>
 ```
 
-As result there is a file `data.dat` in `data` dir, which has the sorted coordinates of the best path found.
+As result there is a file `data.dat` in `data` dir and a file `log1.dat` in `log` dir which have the sorted coordinates of the best path found and the log respectively.
 
 Then run the Gnuplot script in `data` dir to see the output.
 
@@ -49,6 +49,17 @@ gnuplot load_graph.gp
 
 <div class="col-md-offset">
   <img src="data/data.png">
+</div>
+
+And run the Gnuplot script in `log` dir to see the output.
+
+```bash
+cd log
+gnuplot load_log.gp
+```
+
+<div class="col-md-offset">
+  <img src="log/log.png">
 </div>
 
 ### Example
