@@ -20,6 +20,14 @@ A seed range `n m` for pseudo-random numbers.
 n,n+1,n+2,..,m
 ```
 
+The initial temperature.
+
+Epsilon to finish.
+
+Temperature decrement for each iteration.
+
+Number of neighbors to search in every batch.
+
 A file with the `id` of every city with this format.
 
 ```
@@ -32,13 +40,21 @@ A file with the `id` of every city with this format.
 
 `final_seed`: The final seed for range (inclusive).
 
+`temperature`: Temperature
+
+`epsilon`: Lower bound temperature.
+
+`decrement`: Decrement percent of temperature.
+
+`iterations`: Number of neighbors to search.
+
 `path_file`: The path of file with the id of every city.
 
 ```bash
-cargo run --release <initial_seed> <final_seed> <path_file>
+cargo run --release <initial_seed> <final_seed> <temperature> <epsilon> <decrement> <iterations> <path_file>
 ```
 
-As result there is a file `data.dat` in `data` dir and a file `log1.dat` in `log` dir which have the sorted coordinates of the best path found and the log respectively.
+As result there is a file `data.dat` in `data` dir which have the sorted coordinates of the best path found. 
 
 Then run the Gnuplot script in `data` dir to see the output.
 
@@ -50,6 +66,8 @@ gnuplot load_graph.gp
 <div class="col-md-offset">
   <img src="data/data.png">
 </div>
+
+Also, there is a file `log.dat` in `log` dir with the solution of every seed, also, there is a file `log1.dat` in same dir with the cost of every solution before to reach best solution.
 
 And run the Gnuplot script in `log` dir to see the output.
 
@@ -65,7 +83,7 @@ gnuplot load_log.gp
 ### Example
 
 ```bash
-cargo run --release 1 10 examples/example-1.txt
+cargo run --release 1 10 7 0.0001 0.99 20 examples/example-1.txt
 ```
 
 ### Test
