@@ -16,7 +16,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let initial_seed = args[1].parse::<u64>().unwrap();
     let final_seed = args[2].parse::<u64>().unwrap();
-    let path_file = &args[3];
+    let path_file = &args[7];
     let instance = read_file(path_file.to_string());
     let mut paths : Vec<Path> = Vec::new();
     let mut cities : Vec<City> = Vec::new();
@@ -29,11 +29,10 @@ fn main() {
     let cities : Vec<City> = cities.into_iter().filter(|x| instance.iter().any(|&y| y == x.id) ).collect();
     let paths : Vec<Path> = paths.into_iter().filter(|x| cities.iter().any(|y| *y == x.city_1) && cities.iter().any(|y| *y == x.city_2) ).collect();
     let seeds : Vec<u64> = (initial_seed..=final_seed).collect();
-
-    let temperature = 7.0;
-    let iterations = 20;
-    let decrement = 0.99;
-    let epsilon = 0.00001;
+    let temperature = args[3].parse::<f64>().unwrap();
+    let epsilon = args[4].parse::<f64>().unwrap();
+    let decrement = args[5].parse::<f64>().unwrap();
+    let iterations = args[6].parse::<u32>().unwrap();
 
     let mut threads : Vec<std::thread::JoinHandle<ThreadState>> = vec![];
 
@@ -56,11 +55,15 @@ fn main() {
     }
     solutions.sort_by(|a,b| a.state.cost().partial_cmp(&b.state.cost()).unwrap());
     let best = solutions[0].clone();
-    write_log(&best,iterations,temperature);
+    let mut best_state = best.state.clone();
+    let mut improved = th_acp::check_neighbors(&mut best_state);
+    while improved {
+        improved = th_acp::check_neighbors(&mut best_state);
+    }
+    write_log(&best,iterations,temperature,epsilon, decrement);
+    write_file(&best_state);
     println!(" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-    println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?} \n Semilla {:?} \n Tiempo {:?} Iteraciones: {} Temperatura: {}", best.state.to_string(), best.state.cost(), best.seed, best.get_time(),iterations,temperature);
-    write_file(best.state);
-
+    println!(" Solucion mejor encontrada: \n {:?} \n Costo: {:?} \n Semilla {:?} \n Tiempo {:?} Iteraciones: {} Temperatura: {}", best_state.to_string(), best_state.cost(), best.seed, best.get_time(),iterations,temperature);
 }
 
 
@@ -142,14 +145,14 @@ fn read_file(path_file: String) -> Vec<u32> {
 * the file can be read using a Gnuplot script.
 * state: the state from which generate the file.
 */
-fn write_file(state : State)  {
+fn write_file(state : &State)  {
     let content = state.get_coordinates();
     let path = "data/data.dat";
     fs::File::create(path).expect("No se pudó crear un archivo");
     fs::write(path, content.as_bytes()).expect("No se pudó escribir un archivo");
 }
 
-fn write_log(sol: &ThreadState, iterations: u32, temperature: f64){
+fn write_log(sol: &ThreadState, iterations: u32, temperature: f64, epsilon: f64, decrement: f64){
     let mut content  = String::new();
     content.push_str("\n >>>>>>>>>>> Instancia: \n");
     content.push_str(&sol.state.to_string());
@@ -168,6 +171,12 @@ fn write_log(sol: &ThreadState, iterations: u32, temperature: f64){
     content.push(' ');
     content.push_str("Temperatura: ");
     content.push_str(&temperature.to_string());
+    content.push(' ');
+    content.push_str("Epsilon: ");
+    content.push_str(&epsilon.to_string());
+    content.push(' ');
+    content.push_str("Decremento: ");
+    content.push_str(&decrement.to_string());
     get_log(sol.log.clone());
     let path = "log/log.dat";
     if !std::path::Path::new(path).is_file() {

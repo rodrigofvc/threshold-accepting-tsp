@@ -116,3 +116,18 @@ fn get_batch(temperature: f64, initial: State, iterations: u32) -> (f64, State) 
     }
     return (prom, current);
 }
+
+pub fn check_neighbors(current: &mut State) -> bool {
+    let mut improved = false;
+    for i in 0..current.tour.len() {
+        for j in i+1..current.tour.len() {
+            let mut other = current.clone();
+            other.set_neighbor(i,j);
+            if other.cost() < current.cost() {
+                current.set_neighbor(i,j);
+                improved = true;
+            }
+        }
+    }
+    return improved;
+}
